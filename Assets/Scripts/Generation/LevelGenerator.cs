@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using Core;
+using Events;
 using UnityEngine;
 
 namespace Generation
@@ -43,11 +45,6 @@ namespace Generation
         [SerializeField, Min(1)] private int maxGraphAttempts = 20;
         [SerializeField, Min(1)] private int maxPlacementTries = 5000;
         [SerializeField] private bool generateOnStart = true;
-
-        /// <summary>
-        /// Raised after a level is fully built. Later becomes a bus event.
-        /// </summary>
-        public event System.Action<GeneratedLevel> Generated;
 
         public GeneratedLevel Current { get; private set; }
 
@@ -103,7 +100,10 @@ namespace Generation
                     Debug.Log($"[LevelGenerator] Success on attempt {attempt} " +
                               $"with {graph.Nodes.Count} rooms ({_tries} placement tries).");
                     LogLayout(Current);
-                    Generated?.Invoke(Current);
+                    if (GameServices.TryGet(out EventBus bus))
+                    {
+                        bus.Publish(new LevelGeneratedEvent(Current));
+                    }
                     return Current;
                 }
 

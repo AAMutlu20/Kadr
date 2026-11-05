@@ -1,3 +1,5 @@
+using Core;
+using Events;
 using Generation;
 using Unity.AI.Navigation;
 using UnityEngine;
@@ -13,6 +15,7 @@ namespace Navmesh
     /// </summary>
     public class NavMeshBaker : MonoBehaviour
     {
+        [Tooltip("Only used by the 'Bake Current Level' context menu. Normal baking is triggered by LevelGeneratedEvent.")]
         [SerializeField] private LevelGenerator generator;
 
         [Tooltip("Which agent type to bake for. 0 is the default Humanoid. Set its radius and height in the Navigation window.")]
@@ -28,18 +31,24 @@ namespace Navmesh
 
         private void OnEnable()
         {
-            if (generator)
+            if (GameServices.TryGet(out EventBus bus))
             {
-                generator.Generated += Bake;
+                bus.Subscribe<LevelGeneratedEvent>(OnLevelGenerated);
             }
         }
 
         private void OnDisable()
         {
-            if (generator)
+            // The bus may already be gone when the game is shutting down.
+            if (GameServices.TryGet(out EventBus bus))
             {
-                generator.Generated -= Bake;
+                bus.Unsubscribe<LevelGeneratedEvent>(OnLevelGenerated);
             }
+        }
+
+        private void OnLevelGenerated(LevelGeneratedEvent generatedEvent)
+        {
+            Bake(generatedEvent.Level);
         }
 
         /// <summary>Re-bakes the level that is currently spawned. Useful from the component's context menu.</summary>
