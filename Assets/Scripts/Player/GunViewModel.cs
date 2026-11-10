@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using VFX;
 
 public class GunViewmodel : MonoBehaviour
 {
@@ -7,6 +8,7 @@ public class GunViewmodel : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private CharacterController body;
     [SerializeField] private Camera cam;
+    [SerializeField] private GameObject bulletHolePrefab;
 
     [Header("Gun")]
     [SerializeField] private int magSize = 12;
@@ -19,6 +21,11 @@ public class GunViewmodel : MonoBehaviour
     [SerializeField] private float spreadAngle; // shotgun: ~4
     [SerializeField] private float equipTime = 0.5f; // can't fire until the draw/raise finishes
     [SerializeField] private LayerMask hitMask = ~0;
+    
+    [Header("VFX")]
+    [SerializeField] private ParticleSystem muzzleFlash;
+    [SerializeField] private MuzzleLight muzzleLight;
+    [SerializeField] private GameObject impactPrefab;
 
     [Header("Locomotion")]
     [SerializeField] private float runSpeed = 6f; // match your controller's sprint speed
@@ -119,6 +126,9 @@ public class GunViewmodel : MonoBehaviour
         _ammo--;
         _nextFireTime = Time.time + fireCooldown;
         animator.SetTrigger(FireHash);
+        
+        if (muzzleFlash) muzzleFlash.Play();
+        if (muzzleLight) muzzleLight.Flash();
 
         for (var i = 0; i < pellets; i++)
         {
@@ -128,11 +138,14 @@ public class GunViewmodel : MonoBehaviour
                 0f);
             var dir = cam.transform.rotation * spread * Vector3.forward;
 
-            if (Physics.Raycast(cam.transform.position, dir, out var hit, range, hitMask, QueryTriggerInteraction.Ignore))
-            {
-                Debug.Log($"Hit {hit.collider.name}");
-                // hit.collider.GetComponentInParent<YourHealthScript>()?.TakeDamage(damage);
-            }
+            if (!Physics.Raycast(cam.transform.position, dir, out var hit, range, hitMask,
+                    QueryTriggerInteraction.Ignore)) continue;
+            Instantiate(impactPrefab, hit.point + hit.normal * 0.01f, Quaternion.LookRotation(hit.normal));
+            if (!bulletHolePrefab) continue;
+            var rot = Quaternion.LookRotation(-hit.normal) // project into the surface
+                      * Quaternion.Euler(0f, 0f, Random.Range(0f, 360f)); // random spin so holes don't look stamped
+            Instantiate(bulletHolePrefab, hit.point + hit.normal * 0.05f, rot);
+            // hit.collider.GetComponentInParent<HPScript>()?.TakeDamage(damage);
         }
     }
 
