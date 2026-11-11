@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 219646208414996718}
   - component: {fileID: 2954018807027183304}
   m_Layer: 8
-  m_Name: Light
+  m_Name: Shotgun_Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

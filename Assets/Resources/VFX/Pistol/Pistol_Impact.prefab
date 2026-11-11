@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6607634546865814041}
   - component: {fileID: 2713691452336578806}
   m_Layer: 0
-  m_Name: Default Impact
+  m_Name: Pistol_Impact
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

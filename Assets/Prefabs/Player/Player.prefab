@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 2931183697574631838}
   - component: {fileID: 4621242746278700368}
   - component: {fileID: 6765237578848114544}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -77,9 +77,7 @@ MonoBehaviour:
   sprintSpeed: 14
   groundAcceleration: 60
   airAcceleration: 20
-  jumpHeight: 2.2
   gravity: 22
-  coyoteTime: 0.1
   lookSensitivity: 0.1
   maxPitch: 85
 --- !u!114 &6765237578848114544
@@ -136,7 +134,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8031592292849500047}
-  - component: {fileID: 6448232815800160913}
+  - component: {fileID: 4770281729495282594}
   m_Layer: 0
   m_Name: WeaponsHolder
   m_TagString: Untagged
@@ -161,7 +159,7 @@ Transform:
   - {fileID: 5841191902421869162}
   m_Father: {fileID: 1250312621696168710}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6448232815800160913
+--- !u!114 &4770281729495282594
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -170,14 +168,45 @@ MonoBehaviour:
   m_GameObject: {fileID: 2191981612111163928}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cc107778a06dc0c48b834cd47a9215ee, type: 3}
+  m_Script: {fileID: 11500000, guid: 9e83c8c83c0c34740aafad2d339cb67b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponSwitcher
-  pistol: {fileID: 448955812030526287}
-  shotgun: {fileID: 8761727725253512257}
-  lastShotDelay: 0.6
+  m_EditorClassIdentifier: Assembly-CSharp::Weapons.WeaponController
+  cam: {fileID: 8264003597976672933}
+  hitMask:
+    serializedVersion: 2
+    m_Bits: 503
+  pistolView: {fileID: 927865374439713184}
+  shotgunView: {fileID: 268043167370310433}
+  pistolConfig:
+    name: Pistol
+    magSize: 12
+    fireCooldown: 0.18
+    equipTime: 0.5
+    range: 100
+    damage: 25
+    pellets: 1
+    spreadAngle: 0.8
+    aimSpreadAngle: 0
+    rechargeInterval: 30
+    depletedHoldTime: 2.1
+  shotgunConfig:
+    name: Shotgun
+    magSize: 8
+    fireCooldown: 2.1
+    equipTime: 0.8
+    range: 50
+    damage: 12
+    pellets: 8
+    spreadAngle: 4
+    aimSpreadAngle: 0
+    rechargeInterval: 30
+    depletedHoldTime: 2.1
+  player: {fileID: 4621242746278700368}
+  aimMoveMultiplier: 0.6
+  aimFovReduction: 10
+  aimTransitionTime: 0.15
   maxLowerWait: 3
-  rechargeInterval: 30
+  debugLowerKey: 1
 --- !u!1 &3380238498438034452
 GameObject:
   m_ObjectHideFlags: 0
@@ -308,7 +337,7 @@ Camera:
     height: 1
   near clip plane: 0.1
   far clip plane: 1000
-  field of view: 50
+  field of view: 60
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -437,7 +466,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.1
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -1095,14 +1124,14 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 82c221a22cb258b49a09f9d61e5ebe6d, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8761727725253512257}
+      addedObject: {fileID: 268043167370310433}
   m_SourcePrefab: {fileID: 100100000, guid: 82c221a22cb258b49a09f9d61e5ebe6d, type: 3}
 --- !u!1 &1560339499714582699 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 82c221a22cb258b49a09f9d61e5ebe6d, type: 3}
   m_PrefabInstance: {fileID: 1830178146829379066}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &8761727725253512257
+--- !u!114 &268043167370310433
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1111,30 +1140,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 1560339499714582699}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8397ea3ea2d74944d8a1f1d1906c10bc, type: 3}
+  m_Script: {fileID: 11500000, guid: 9a312dbb69b495444bc51fe091815415, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Player.GunViewmodel
+  m_EditorClassIdentifier: Assembly-CSharp::Weapons.GunViewmodel
   animator: {fileID: 5191679476201822315}
   body: {fileID: 2931183697574631838}
-  cam: {fileID: 8264003597976672933}
-  bulletHolePrefab: {fileID: 191955333447252114, guid: 577b342b10d583f47a70029d6a1e8b6f, type: 3}
-  magSize: 8
-  canReload: 0
-  racksAfterFire: 1
-  fireCooldown: 2.1
-  range: 50
-  damage: 12
-  pellets: 8
-  spreadAngle: 4
-  equipTime: 0.8
-  hitMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
   muzzleFlash: {fileID: 8343703015767976976}
   muzzleLight: {fileID: 687461914023559402}
   impactPrefab: {fileID: 5806340388042005287, guid: 8f3ae0e13c32f6a489cd87812082ebbe, type: 3}
+  bulletHolePrefab: {fileID: 191955333447252114, guid: 577b342b10d583f47a70029d6a1e8b6f, type: 3}
+  aimOffsetRoot: {fileID: 0}
+  aimOffset: {x: 0, y: -0.05, z: -0.2}
+  aimOffsetTime: 0.15
   runSpeed: 14
-  debugLowerKey: 1
 --- !u!4 &2228332037550359057 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 82c221a22cb258b49a09f9d61e5ebe6d, type: 3}
@@ -2087,7 +2105,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 188da9cc6a4bedd49a7c9495278908d2, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 448955812030526287}
+      addedObject: {fileID: 927865374439713184}
   m_SourcePrefab: {fileID: 100100000, guid: 188da9cc6a4bedd49a7c9495278908d2, type: 3}
 --- !u!4 &3158298843154964698 stripped
 Transform:
@@ -2104,7 +2122,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 188da9cc6a4bedd49a7c9495278908d2, type: 3}
   m_PrefabInstance: {fileID: 8943148112751117854}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &448955812030526287
+--- !u!114 &927865374439713184
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2113,30 +2131,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 8132682901221374799}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8397ea3ea2d74944d8a1f1d1906c10bc, type: 3}
+  m_Script: {fileID: 11500000, guid: 9a312dbb69b495444bc51fe091815415, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Player.GunViewmodel
+  m_EditorClassIdentifier: Assembly-CSharp::Weapons.GunViewmodel
   animator: {fileID: 3276056994179251087}
   body: {fileID: 2931183697574631838}
-  cam: {fileID: 8264003597976672933}
-  bulletHolePrefab: {fileID: 191955333447252114, guid: 577b342b10d583f47a70029d6a1e8b6f, type: 3}
-  magSize: 10
-  canReload: 1
-  racksAfterFire: 0
-  fireCooldown: 0.18
-  range: 100
-  damage: 25
-  pellets: 1
-  spreadAngle: 0
-  equipTime: 0.5
-  hitMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
   muzzleFlash: {fileID: 4968488404533611781}
   muzzleLight: {fileID: 1722970004069479393}
   impactPrefab: {fileID: 1852421796468300712, guid: 70b19f7794046e645a92aae120316919, type: 3}
+  bulletHolePrefab: {fileID: 191955333447252114, guid: 577b342b10d583f47a70029d6a1e8b6f, type: 3}
+  aimOffsetRoot: {fileID: 8905525963299824117}
+  aimOffset: {x: 0, y: -0.2, z: 0}
+  aimOffsetTime: 0.15
   runSpeed: 14
-  debugLowerKey: 1
 --- !u!4 &8905525963299824117 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 188da9cc6a4bedd49a7c9495278908d2, type: 3}

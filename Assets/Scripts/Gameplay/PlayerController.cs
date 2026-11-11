@@ -6,13 +6,15 @@ namespace Gameplay
     /// First-person movement and look for the player, built on CharacterController.
     ///
     /// All distances are in standard units, where the player is 4 units tall (about 1.8 m irl), so
-    /// speeds, jump height and gravity are roughly 2.2 times the usual metre-based values.
+    /// speeds and gravity are roughly 2.2 times the usual metre-based values. There is deliberately
+    /// no jumping in Kadr: the player walks, sprints and falls.
     ///
     /// The yaw turns this object and the pitch turns only CameraRoot, so the camera's arms and weapon
     /// follow the view while movement stays flat on the floor.
     ///
-    /// Other systems change how the player moves through two switches, not by reaching into this class:
-    /// SpeedMultiplier (the photo windup slows the player) and InputEnabled (death, menus, cutscenes).
+    /// Other systems change how the player moves through three switches, not by reaching into this class:
+    /// SpeedMultiplier (the photo windup slows the player), CanSprint (aiming takes it away) and
+    /// InputEnabled (death, menus, cutscenes).
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class PlayerController : MonoBehaviour
@@ -26,14 +28,11 @@ namespace Gameplay
         [SerializeField] private float sprintSpeed = 14f;
         [Tooltip("How fast the player reaches walking speed on the ground. Higher feels snappier.")]
         [SerializeField] private float groundAcceleration = 60f;
-        [Tooltip("Lower than ground acceleration, so a jump commits the player to a direction.")]
+        [Tooltip("Lower than ground acceleration, so walking off a ledge commits the player to a direction.")]
         [SerializeField] private float airAcceleration = 20f;
 
-        [Header("Jump and gravity (units)")]
-        [SerializeField] private float jumpHeight = 2.2f;
+        [Header("Gravity (units)")]
         [SerializeField] private float gravity = 22f;
-        [Tooltip("Seconds after walking off a ledge in which a jump still works. Makes edges feel fair.")]
-        [SerializeField] private float coyoteTime = 0.1f;
 
         [Header("Look")]
         [Tooltip("Degrees of turn per pixel of mouse movement.")]
@@ -50,13 +49,24 @@ namespace Gameplay
         private Vector3 _horizontalVelocity;
         private float _verticalVelocity;
         private float _pitch;
-        private float _lastGroundedTime = float.NegativeInfinity;
 
         /// <summary>
         /// Scales walking and sprinting speed. 1 is normal. Set by systems such as the camera windup
         /// (which slows the player) so that they never need to know this class's speed values.
         /// </summary>
         public float SpeedMultiplier { get; set; } = 1f;
+
+        /// <summary>
+        /// Scales speed for the current weapon state (aiming slows the player). Separate from
+        /// SpeedMultiplier so the weapon system and the camera windup never overwrite each other.
+        /// </summary>
+        public float WeaponSpeedMultiplier { get; set; } = 1f;
+
+        /// <summary>
+        /// When false the player walks even if sprint is held. Set by the weapon controller while aiming.
+        /// Kept separate from SpeedMultiplier so the two systems never overwrite each other.
+        /// </summary>
+        public bool CanSprint { get; set; } = true;
 
         /// <summary>
         /// When false the player ignores movement and look input and only falls. Turned off on death.
@@ -122,46 +132,26 @@ namespace Gameplay
         {
             var grounded = _controller.isGrounded;
 
-            if (grounded)
+            if (grounded && _verticalVelocity < 0f)
             {
-                _lastGroundedTime = Time.time;
-
-                if (_verticalVelocity < 0f)
-                {
-                    _verticalVelocity = GroundedStickVelocity;
-                }
+                _verticalVelocity = GroundedStickVelocity;
             }
 
             var input = InputEnabled ? GameInput.Move() : Vector2.zero;
-            var wantsSprint = InputEnabled && GameInput.SprintHeld() && input.y > 0f;
+            var wantsSprint = InputEnabled && CanSprint && GameInput.SprintHeld() && input.y > 0f;
 
             // Sprinting only works forward, so strafing and backpedalling stay at walking pace.
-            var targetSpeed = (wantsSprint ? sprintSpeed : walkSpeed) * SpeedMultiplier;
+            var targetSpeed = (wantsSprint ? sprintSpeed : walkSpeed) * SpeedMultiplier * WeaponSpeedMultiplier;
             var targetVelocity = (transform.right * input.x + transform.forward * input.y) * targetSpeed;
 
             var acceleration = grounded ? groundAcceleration : airAcceleration;
             _horizontalVelocity = Vector3.MoveTowards(
                 _horizontalVelocity, targetVelocity, acceleration * Time.deltaTime);
 
-            if (InputEnabled && GameInput.JumpPressed() && Time.time - _lastGroundedTime <= coyoteTime)
-            {
-                // v = sqrt(2 * g * h): the launch speed that peaks exactly at jumpHeight.
-                _verticalVelocity = Mathf.Sqrt(2f * gravity * jumpHeight);
-
-                // Used up, so holding the key cannot trigger a second jump in the coyote window.
-                _lastGroundedTime = float.NegativeInfinity;
-            }
-
             _verticalVelocity -= gravity * Time.deltaTime;
 
             var velocity = _horizontalVelocity + Vector3.up * _verticalVelocity;
-            var flags = _controller.Move(velocity * Time.deltaTime);
-
-            // Stop rising when the head hits a ceiling, otherwise the player hangs there until gravity wins.
-            if ((flags & CollisionFlags.Above) != 0 && _verticalVelocity > 0f)
-            {
-                _verticalVelocity = 0f;
-            }
+            _controller.Move(velocity * Time.deltaTime);
         }
 
         /// <summary>
