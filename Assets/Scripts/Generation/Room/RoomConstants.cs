@@ -6,7 +6,7 @@ namespace Generation
     public static class RoomConstants
     {
         public const float DoorWidth = 5f;
-        public const float DoorHeight = 5f;
+        public const float DoorHeight = 5.5f;
         public const float WallThickness = 1f;
     }
 }
