@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6110528498775207942}
   - component: {fileID: 3246991185849172358}
   - component: {fileID: 1011231614982678924}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Stairs (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1219,7 +1219,7 @@ GameObject:
   - component: {fileID: 5978031228569439730}
   - component: {fileID: 7711064244897542672}
   - component: {fileID: 6579918665301177325}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1575,7 +1575,7 @@ GameObject:
   - component: {fileID: 4321546851072354658}
   - component: {fileID: 1269525235552449893}
   - component: {fileID: 5525960864317002459}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ColumnBase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1932,7 +1932,7 @@ GameObject:
   - component: {fileID: 74591789971521097}
   - component: {fileID: 7657020244838818795}
   - component: {fileID: 4147920450564778841}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2288,7 +2288,7 @@ GameObject:
   - component: {fileID: 3514943554483521117}
   - component: {fileID: 1491205271037115152}
   - component: {fileID: 2434214766004852397}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: GrapplingPlatform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2644,7 +2644,7 @@ GameObject:
   - component: {fileID: 6446818660714714108}
   - component: {fileID: 7802279723782988275}
   - component: {fileID: 2908537532948488336}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CellingPillar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2996,7 +2996,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4017980568149859478}
   - component: {fileID: 6082343253438396806}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: S1
   m_TagString: Untagged
   m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
@@ -3044,7 +3044,7 @@ GameObject:
   - component: {fileID: 5660876546479823633}
   - component: {fileID: 2391557460592486041}
   - component: {fileID: 1266461019833059130}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3400,7 +3400,7 @@ GameObject:
   - component: {fileID: 8916999233947426519}
   - component: {fileID: 8614468024525730471}
   - component: {fileID: 7328832694843441030}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Stairs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4605,7 +4605,7 @@ GameObject:
   - component: {fileID: 7035035520857738507}
   - component: {fileID: 2419019438933699285}
   - component: {fileID: 2800980691179462894}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4961,7 +4961,7 @@ GameObject:
   - component: {fileID: 5605930189503609502}
   - component: {fileID: 2944908259661082177}
   - component: {fileID: 7205327881065039559}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CellingPillar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5370,7 +5370,7 @@ GameObject:
   - component: {fileID: 5831909732002312418}
   - component: {fileID: 8377518431409587918}
   - component: {fileID: 4165569498839259721}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CellingPillar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5726,7 +5726,7 @@ GameObject:
   - component: {fileID: 8013398595590911016}
   - component: {fileID: 929846880127177886}
   - component: {fileID: 4184994799112245221}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: FloorStep (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6082,7 +6082,7 @@ GameObject:
   - component: {fileID: 7774366808958677066}
   - component: {fileID: 7908507655154721931}
   - component: {fileID: 7493614250094087738}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6438,7 +6438,7 @@ GameObject:
   - component: {fileID: 7019376709935155311}
   - component: {fileID: 5034072266131542896}
   - component: {fileID: 4828973351027825426}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Stairs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7987,7 +7987,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3224283838413889140}
   - component: {fileID: 4281839689246764605}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: -CombatRoomB, Floor 1-
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8048,7 +8048,7 @@ GameObject:
   - component: {fileID: 3341721785662336864}
   - component: {fileID: 7096212625057870390}
   - component: {fileID: 1394361906265664948}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Celling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8411,7 +8411,7 @@ GameObject:
   - component: {fileID: 1447795089992508205}
   - component: {fileID: 1576664450517813240}
   - component: {fileID: 4479404129939260459}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8767,7 +8767,7 @@ GameObject:
   - component: {fileID: 8895445251334726236}
   - component: {fileID: 2099681701981929876}
   - component: {fileID: 1864715662055840972}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9123,7 +9123,7 @@ GameObject:
   - component: {fileID: 5519046683801192907}
   - component: {fileID: 3947128040936941529}
   - component: {fileID: 71475163032115290}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9479,7 +9479,7 @@ GameObject:
   - component: {fileID: 572920911339171742}
   - component: {fileID: 7377123218680888366}
   - component: {fileID: 5568997476073465050}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Stairs (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10162,7 +10162,7 @@ GameObject:
   - component: {fileID: 3776261925711687738}
   - component: {fileID: 6680978031902336606}
   - component: {fileID: 7785503840085345891}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10518,7 +10518,7 @@ GameObject:
   - component: {fileID: 9074373326846511141}
   - component: {fileID: 871955767704915348}
   - component: {fileID: 6722238907569165109}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ColumnTop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10874,7 +10874,7 @@ GameObject:
   - component: {fileID: 4933126754374124168}
   - component: {fileID: 545175551413975807}
   - component: {fileID: 9102536418475574310}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ColumnTop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11230,7 +11230,7 @@ GameObject:
   - component: {fileID: 3749514433732712700}
   - component: {fileID: 6977147775470869578}
   - component: {fileID: 2143263586408271059}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Railing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12087,7 +12087,7 @@ GameObject:
   - component: {fileID: 5477430364497862479}
   - component: {fileID: 1462223718918562227}
   - component: {fileID: 7111820705485361845}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: FloorStep (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12443,7 +12443,7 @@ GameObject:
   - component: {fileID: 8874391136400347675}
   - component: {fileID: 1220447943537845037}
   - component: {fileID: 1663090497992945966}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ColumnBase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12800,7 +12800,7 @@ GameObject:
   - component: {fileID: 3420758369751527924}
   - component: {fileID: 8224546963389954887}
   - component: {fileID: 3573823521651666446}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CellingPillar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13156,7 +13156,7 @@ GameObject:
   - component: {fileID: 5699519477385742679}
   - component: {fileID: 8141429275066604532}
   - component: {fileID: 5212224031919165128}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13512,7 +13512,7 @@ GameObject:
   - component: {fileID: 5035781118212338092}
   - component: {fileID: 6144824573314759859}
   - component: {fileID: 2631474897269830254}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13868,7 +13868,7 @@ GameObject:
   - component: {fileID: 6367923033134091637}
   - component: {fileID: 5913911636440805800}
   - component: {fileID: 8080600062223934053}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Door
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14446,7 +14446,7 @@ GameObject:
   - component: {fileID: 158685406132632391}
   - component: {fileID: 5192355837017035919}
   - component: {fileID: 27060182282447007}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Railing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15129,7 +15129,7 @@ GameObject:
   - component: {fileID: 7530496356548917893}
   - component: {fileID: 8638250181227495319}
   - component: {fileID: 8856023540615572182}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15485,7 +15485,7 @@ GameObject:
   - component: {fileID: 1096062672800915558}
   - component: {fileID: 8033119154723132377}
   - component: {fileID: 4081158758363013904}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ColumnBase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15842,7 +15842,7 @@ GameObject:
   - component: {fileID: 4988713033855156021}
   - component: {fileID: 7698481281053074313}
   - component: {fileID: 3932686658794918148}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16198,7 +16198,7 @@ GameObject:
   - component: {fileID: 2492968455430075214}
   - component: {fileID: 469090800164868511}
   - component: {fileID: 804989843183621207}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Railing (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17055,7 +17055,7 @@ GameObject:
   - component: {fileID: 1562124309189682464}
   - component: {fileID: 5005936154714325093}
   - component: {fileID: 6476386269697451409}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17411,7 +17411,7 @@ GameObject:
   - component: {fileID: 9077388203912571652}
   - component: {fileID: 8038522733874789714}
   - component: {fileID: 4012391563466644309}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17762,7 +17762,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3345048142742653587}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17829,7 +17829,7 @@ GameObject:
   - component: {fileID: 531401446570137463}
   - component: {fileID: 6009650462773392327}
   - component: {fileID: 490743420068473375}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Hook
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18185,7 +18185,7 @@ GameObject:
   - component: {fileID: 7859252942779608971}
   - component: {fileID: 4690161927582311645}
   - component: {fileID: 2117531544520244784}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18541,7 +18541,7 @@ GameObject:
   - component: {fileID: 4972052981813333908}
   - component: {fileID: 5937620512571908552}
   - component: {fileID: 8258560521430575708}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18897,7 +18897,7 @@ GameObject:
   - component: {fileID: 5393811983190174094}
   - component: {fileID: 7997483769440084538}
   - component: {fileID: 8990371208154319403}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19253,7 +19253,7 @@ GameObject:
   - component: {fileID: 8532124850107670705}
   - component: {fileID: 569206410052960056}
   - component: {fileID: 7969784742937127426}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19609,7 +19609,7 @@ GameObject:
   - component: {fileID: 804814954851080545}
   - component: {fileID: 2688852791106927672}
   - component: {fileID: 4837638708269436009}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ColumnBase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19966,7 +19966,7 @@ GameObject:
   - component: {fileID: 7288706487920783342}
   - component: {fileID: 4744165844511329919}
   - component: {fileID: 9055065369556875454}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Stairs (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20649,7 +20649,7 @@ GameObject:
   - component: {fileID: 1281247245494272265}
   - component: {fileID: 6030407593794237926}
   - component: {fileID: 1866850952691376691}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ColumnTop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21005,7 +21005,7 @@ GameObject:
   - component: {fileID: 2453915581543345408}
   - component: {fileID: 3388733767689230083}
   - component: {fileID: 2258949229981683549}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Door
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21583,7 +21583,7 @@ GameObject:
   - component: {fileID: 6058516207802318593}
   - component: {fileID: 817089598496205205}
   - component: {fileID: 944784023102724553}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21939,7 +21939,7 @@ GameObject:
   - component: {fileID: 5499395753851532352}
   - component: {fileID: 7379412433330368979}
   - component: {fileID: 4091087167959156004}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22295,7 +22295,7 @@ GameObject:
   - component: {fileID: 6954671990930569667}
   - component: {fileID: 3840683562648652987}
   - component: {fileID: 688116644353656546}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Railing (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23848,7 +23848,7 @@ GameObject:
   - component: {fileID: 8995894542186805126}
   - component: {fileID: 7278248339118986234}
   - component: {fileID: 4506033586822920371}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: ColumnTop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -24204,7 +24204,7 @@ GameObject:
   - component: {fileID: 6908569530650371299}
   - component: {fileID: 6541790743228864921}
   - component: {fileID: 3995335402845570041}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: FloorStep (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -24560,7 +24560,7 @@ GameObject:
   - component: {fileID: 7804954997713900938}
   - component: {fileID: 7901473341338982083}
   - component: {fileID: 1890585088217409989}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -24916,7 +24916,7 @@ GameObject:
   - component: {fileID: 2849113049162605807}
   - component: {fileID: 3876120486070727611}
   - component: {fileID: 4522671382524121706}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CellingPillar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -25272,7 +25272,7 @@ GameObject:
   - component: {fileID: 7616615011178292674}
   - component: {fileID: 7737812975669995251}
   - component: {fileID: 8621357842498463067}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: FloorStep
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -25628,7 +25628,7 @@ GameObject:
   - component: {fileID: 6358833039998191803}
   - component: {fileID: 686776512657447293}
   - component: {fileID: 51065738945617352}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -25984,7 +25984,7 @@ GameObject:
   - component: {fileID: 7526442487574354814}
   - component: {fileID: 7745849722962466911}
   - component: {fileID: 6260470307115762714}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -26341,7 +26341,7 @@ GameObject:
   - component: {fileID: 2218296752474117861}
   - component: {fileID: 4897497591136654526}
   - component: {fileID: 1120541750050736115}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -26692,7 +26692,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7797984918687831916}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Sockets
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -26730,7 +26730,7 @@ GameObject:
   - component: {fileID: 5300755664411232203}
   - component: {fileID: 8958064077258672198}
   - component: {fileID: 7092776037124482353}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -27086,7 +27086,7 @@ GameObject:
   - component: {fileID: 5268143626800030385}
   - component: {fileID: 3293533898364147985}
   - component: {fileID: 8650464882382731438}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -27442,7 +27442,7 @@ GameObject:
   - component: {fileID: 587460138314797273}
   - component: {fileID: 5599821023331635505}
   - component: {fileID: 640908942034506027}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CellingPillar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -27798,7 +27798,7 @@ GameObject:
   - component: {fileID: 1514764238433557911}
   - component: {fileID: 2459282874800547457}
   - component: {fileID: 9056435538189818805}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -28154,7 +28154,7 @@ GameObject:
   - component: {fileID: 4550165711871895616}
   - component: {fileID: 2348466465631897998}
   - component: {fileID: 3829372558877263491}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -28505,7 +28505,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4267889353215426161}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Stairs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -28550,7 +28550,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 677340676973524674}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Walls
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -28594,7 +28594,7 @@ GameObject:
   - component: {fileID: 4751322259897547884}
   - component: {fileID: 7729283427901822942}
   - component: {fileID: 3409764972955868351}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: MovingBase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -28950,7 +28950,7 @@ GameObject:
   - component: {fileID: 2667759527026953423}
   - component: {fileID: 1815529030411363479}
   - component: {fileID: 8757353392328830399}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -29306,7 +29306,7 @@ GameObject:
   - component: {fileID: 6957671325708860968}
   - component: {fileID: 5539429986480053469}
   - component: {fileID: 5809013210893862839}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -29657,7 +29657,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8012937944903850134}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Columns
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -29697,7 +29697,7 @@ GameObject:
   - component: {fileID: 3730361373865449812}
   - component: {fileID: 1249758383147572885}
   - component: {fileID: 4838972497157770837}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CellingPillar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -30053,7 +30053,7 @@ GameObject:
   - component: {fileID: 7845200151466308256}
   - component: {fileID: 612165266581888641}
   - component: {fileID: 547161484349579839}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -30409,7 +30409,7 @@ GameObject:
   - component: {fileID: 2665912296768722739}
   - component: {fileID: 1109764400533691757}
   - component: {fileID: 694395066629337871}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: FloorStep
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -30765,7 +30765,7 @@ GameObject:
   - component: {fileID: 8000188245637093765}
   - component: {fileID: 6817125703383787957}
   - component: {fileID: 523756238578362104}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31121,7 +31121,7 @@ GameObject:
   - component: {fileID: 5352268024385947591}
   - component: {fileID: 8735120405731569653}
   - component: {fileID: 561795994514555834}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: GrapplingPlatform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31478,7 +31478,7 @@ GameObject:
   - component: {fileID: 8766060390236672541}
   - component: {fileID: 3935049527792714150}
   - component: {fileID: 7443835737533723765}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31830,7 +31830,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8415695606751091135}
   - component: {fileID: 2015705541878393658}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: S2
   m_TagString: Untagged
   m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
@@ -31878,7 +31878,7 @@ GameObject:
   - component: {fileID: 6381756713251821431}
   - component: {fileID: 7688985081346477237}
   - component: {fileID: 970631397278629978}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: CatwalkPillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32229,7 +32229,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 252466298090937062}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Doors
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32267,7 +32267,7 @@ GameObject:
   - component: {fileID: 2942905554938314973}
   - component: {fileID: 8888179139704748676}
   - component: {fileID: 7878290180880188153}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Catwalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}

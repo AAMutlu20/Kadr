@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7496503738271733555}
   - component: {fileID: 3819271648716390480}
   - component: {fileID: 2160646268068686476}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -423,7 +423,7 @@ GameObject:
   - component: {fileID: 3728216042268210902}
   - component: {fileID: 1348296454865339833}
   - component: {fileID: 3858344805516370377}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -776,7 +776,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8078677933782026037}
   - component: {fileID: 6221287920118994025}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: -T-Junction, Floor 1-
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -831,7 +831,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8410966109317392117}
   - component: {fileID: 6643706760117060328}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: S1
   m_TagString: Untagged
   m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
@@ -879,7 +879,7 @@ GameObject:
   - component: {fileID: 4052465253240753042}
   - component: {fileID: 2881842956201381331}
   - component: {fileID: 4019980480528269378}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Door
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1457,7 +1457,7 @@ GameObject:
   - component: {fileID: 6214720334417072946}
   - component: {fileID: 1382438811901117646}
   - component: {fileID: 9121971149440924810}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1808,7 +1808,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8175177233848619084}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Walls
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1850,7 +1850,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7233929802962918168}
   - component: {fileID: 3332718575396602369}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: S3
   m_TagString: Untagged
   m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
@@ -1893,7 +1893,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8083960565658128424}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Celling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1932,7 +1932,7 @@ GameObject:
   - component: {fileID: 1285037848797091465}
   - component: {fileID: 7738378914928852039}
   - component: {fileID: 2714314965098722471}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2288,7 +2288,7 @@ GameObject:
   - component: {fileID: 3952439613579157061}
   - component: {fileID: 2956554222370197537}
   - component: {fileID: 6996094619814123316}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2644,7 +2644,7 @@ GameObject:
   - component: {fileID: 5487780136386674854}
   - component: {fileID: 2712243629746468693}
   - component: {fileID: 4105790599935725176}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3000,7 +3000,7 @@ GameObject:
   - component: {fileID: 1179293363047691547}
   - component: {fileID: 8586789737192789753}
   - component: {fileID: 9078837315797260094}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3351,7 +3351,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7177830618887628846}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Doorways
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3390,7 +3390,7 @@ GameObject:
   - component: {fileID: 8420690267913518957}
   - component: {fileID: 2097583366382168086}
   - component: {fileID: 907198615703278033}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3746,7 +3746,7 @@ GameObject:
   - component: {fileID: 1917902344255719513}
   - component: {fileID: 6073635495737358055}
   - component: {fileID: 7538199863512773774}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Celling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4102,7 +4102,7 @@ GameObject:
   - component: {fileID: 2172365896270518527}
   - component: {fileID: 2763846310882322475}
   - component: {fileID: 5839975113317037893}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4458,7 +4458,7 @@ GameObject:
   - component: {fileID: 4122321874814172117}
   - component: {fileID: 5023304020139521431}
   - component: {fileID: 4928614377569454844}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4814,7 +4814,7 @@ GameObject:
   - component: {fileID: 1195486631273122213}
   - component: {fileID: 5994672535179207125}
   - component: {fileID: 8493185955646094047}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Door
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5392,7 +5392,7 @@ GameObject:
   - component: {fileID: 8893853170276612229}
   - component: {fileID: 5726544800034367438}
   - component: {fileID: 2672533390963261250}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Door
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5970,7 +5970,7 @@ GameObject:
   - component: {fileID: 5862465565583071149}
   - component: {fileID: 8939754593600280312}
   - component: {fileID: 6169937307871656325}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Celling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6321,7 +6321,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1906815795567163474}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Sockets
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6360,7 +6360,7 @@ GameObject:
   - component: {fileID: 7667010785619819452}
   - component: {fileID: 2311661062908412161}
   - component: {fileID: 4371851133734444804}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Celling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6716,7 +6716,7 @@ GameObject:
   - component: {fileID: 5094508174357577133}
   - component: {fileID: 1685378772236444357}
   - component: {fileID: 8215228410475473938}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7068,7 +7068,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2380650248905773039}
   - component: {fileID: 4481057834766067556}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: S2
   m_TagString: Untagged
   m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}

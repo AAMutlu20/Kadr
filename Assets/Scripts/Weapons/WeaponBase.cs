@@ -108,19 +108,52 @@ namespace Weapons
                     0f);
                 var dir = camTransform.rotation * spread * Vector3.forward;
 
-                if (!Physics.Raycast(camTransform.position, dir, out var hit, Config.range,
-                        Context.HitMask, QueryTriggerInteraction.Ignore)) continue;
+                if (!TryRaycastIgnoringShooter(camTransform.position, dir, out var hit)) continue;
 
                 // GetComponentInParent: the collider is usually on a child of the enemy root.
                 var target = hit.collider.GetComponentInParent<IDamageable>();
                 if (target != null)
                 {
                     target.TakeDamage(Config.damage, Context.Shooter);
-                    continue; // living target: no sparks or decal
+
+                    // The target decides what being hit looks like (blood, sparks...), we only say where.
+                    hit.collider.GetComponentInParent<IHitReceiver>()?.OnHit(hit.point, hit.normal);
+                    continue; // living target: no bullet hole
                 }
 
                 View.SpawnImpact(hit.point, hit.normal);
             }
+        }
+
+        // Reused every shot so firing never allocates.
+        private static readonly RaycastHit[] HitBuffer = new RaycastHit[16];
+
+        /// <summary>
+        /// Raycast that skips anything belonging to the shooter (the player's own capsule, arms and
+        /// any child collider), so a shot can never hurt the player or be blocked by the player's body,
+        /// whatever the Hit Mask is set to. Returns the nearest hit on anything else.
+        /// </summary>
+        private bool TryRaycastIgnoringShooter(Vector3 origin, Vector3 direction, out RaycastHit nearest)
+        {
+            var count = Physics.RaycastNonAlloc(origin, direction, HitBuffer, Config.range,
+                Context.HitMask, QueryTriggerInteraction.Ignore);
+
+            nearest = default;
+            var nearestDistance = float.MaxValue;
+            var found = false;
+
+            for (var i = 0; i < count; i++)
+            {
+                var candidate = HitBuffer[i];
+                if (candidate.collider.transform.IsChildOf(Context.Shooter.transform)) continue;
+                if (candidate.distance >= nearestDistance) continue;
+
+                nearest = candidate;
+                nearestDistance = candidate.distance;
+                found = true;
+            }
+
+            return found;
         }
     }
 }

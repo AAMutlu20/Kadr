@@ -2242,7 +2242,8 @@ GameObject:
   - component: {fileID: 3839716128622131586}
   - component: {fileID: 4458450716435228}
   - component: {fileID: 995047724889024176}
-  m_Layer: 0
+  - component: {fileID: 2320884950836846454}
+  m_Layer: 6
   m_Name: Zombie
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2336,11 +2337,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemies.EnemyController
   stats: {fileID: 11400000, guid: ee3877ff6423b17479865879f01cc554, type: 2}
-  animator: {fileID: 0}
-  eye: {fileID: 0}
+  animator: {fileID: 5866666021909216657}
+  eye: {fileID: -863817968804440280}
   sightBlockers:
     serializedVersion: 2
     m_Bits: 1
+--- !u!114 &2320884950836846454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7012699890109632342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622deceb88161404a8f40287a3cde9b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.HitEffect
+  effectPrefab: {fileID: 5253329068730845926, guid: 7212169744c452e44a4fac124305ace8, type: 3}
+  lifetime: 0.5
 --- !u!1 &7311771117472097349
 GameObject:
   m_ObjectHideFlags: 0

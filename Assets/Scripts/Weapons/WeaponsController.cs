@@ -67,6 +67,7 @@ namespace Weapons
 
         public IWeaponStrategy Current => _weapons[_current];
         public bool IsSwitching => _switching;
+        public bool InputEnabled { get; set; } = true;
 
         private void Awake()
         {
@@ -131,6 +132,7 @@ namespace Weapons
         {
             var kb = Keyboard.current;
             var mouse = Mouse.current;
+            if (!InputEnabled) return;
             if (kb == null || mouse == null) return;
 
             // Number keys to select slots directly
@@ -168,7 +170,7 @@ namespace Weapons
         private void UpdateAiming()
         {
             var mouse = Mouse.current;
-            var wantsAim = mouse != null && mouse.rightButton.isPressed
+            var wantsAim = InputEnabled && mouse != null && mouse.rightButton.isPressed
                            && !_switching
                            && Current.CanAim
                            && !Current.IsBusy

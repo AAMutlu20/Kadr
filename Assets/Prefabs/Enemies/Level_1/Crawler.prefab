@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4413098427389100656}
   - component: {fileID: 3020259780658732423}
   - component: {fileID: 8443572239602781088}
+  - component: {fileID: 5562584281258871197}
   m_Layer: 6
   m_Name: Crawler
   m_TagString: Untagged
@@ -113,6 +114,20 @@ MonoBehaviour:
   sightBlockers:
     serializedVersion: 2
     m_Bits: 1
+--- !u!114 &5562584281258871197
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 183073499538881388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622deceb88161404a8f40287a3cde9b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.HitEffect
+  effectPrefab: {fileID: 5253329068730845926, guid: 7212169744c452e44a4fac124305ace8, type: 3}
+  lifetime: 0.5
 --- !u!1 &1868919312308353554
 GameObject:
   m_ObjectHideFlags: 0
