@@ -21,6 +21,10 @@ namespace Items
                  "It is scaled automatically to fit the grid footprint below. Empty = a plain tinted block.")]
         [SerializeField] private GameObject inventoryModel;
 
+        [Header("Compartment")]
+        [Tooltip("Consumable = bottom half of the case. Permanent = the lid (weapons, camera, torch, key items).")]
+        [SerializeField] private ItemCategory category = ItemCategory.Consumable;
+
         [Header("Grid footprint (cells)")]
         [SerializeField, Min(1)] private int width = 1;
         [SerializeField, Min(1)] private int height = 1;
@@ -37,6 +41,7 @@ namespace Items
         public string DisplayName => displayName;
         public string Description => description;
         public Sprite Icon => icon;
+        public ItemCategory Category => category;
         public GameObject InventoryModel => inventoryModel;
         public int Width => width;
         public int Height => height;

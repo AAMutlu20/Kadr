@@ -1,45 +1,81 @@
+using System.Collections.Generic;
 using Core;
 using Events;
+using Gameplay;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Items
 {
     /// <summary>
-    /// The 2D part of the inventory screen, drawn over the 3D suitcase: the health bar (top left), XP (top right),
-    /// the name and description of the item under the cursor (bottom) and a controls hint.
+    /// The 2D parts of the inventory screen. Two kinds:
     ///
-    /// Both numbers come from the event bus, so this class never asks Health or an XP object for anything while it
-    /// runs. The canvas is built in code, so the only setup is this component on an empty GameObject and the
-    /// player's Inventory (used to find the player's Health and to filter the health events).
+    ///  - Panels ON the suitcase lid (world space canvases): the health bar with XP under it, and the "orders" note.
+    ///    Each sits at an anchor object you place on the lid, as a child of the lid mesh, so it swings with the lid.
+    ///  - Text on the screen (overlay): the name and description of the item under the cursor, and a controls hint.
     ///
-    /// The bar is a RawImage that scrolls sideways inside a mask whose width follows the health. That clips the
-    /// pattern instead of squashing it, and it turns yellow and then red as health drops, like Fine, Caution and
+    /// Health and XP come from the event bus, so this class never asks Health or an XP object for anything while it
+    /// runs. The canvases are built in code. If an anchor is left empty, that panel falls back to a corner of the
+    /// screen, so the screen works before the anchors exist.
+    ///
+    /// ANCHOR ORIENTATION: a world canvas is read when the viewer looks along the anchor's +Z. So the anchor's blue
+    /// +Z arrow must point INTO the lid, away from the camera, and its green +Y arrow must point up the lid. The
+    /// rectangle drawn in the Scene view shows the panel's size and place.
+    ///
+    /// The health bar is a RawImage that scrolls sideways inside a mask whose width follows the health. That clips
+    /// the pattern instead of squashing it, and it turns yellow and then red as health drops, like Fine, Caution and
     /// Danger in Resident Evil.
     /// </summary>
     public class InventoryHud : MonoBehaviour
     {
+        [Header("References")]
         [SerializeField] private Inventory inventory;
-        [Tooltip("Distance from the screen corners, in reference pixels (1920 x 1080).")]
-        [SerializeField] private Vector2 margin = new(80f, 70f);
-        [SerializeField] private float barWidth = 360f;
-        [SerializeField] private float barHeight = 40f;
+        [SerializeField] private SuitcaseRig rig;
+
+        [Header("Panels on the lid (children of the lid mesh)")]
+        [Tooltip("Where the health bar and XP go. Empty = top left of the screen.")]
+        [SerializeField] private Transform healthAnchor;
+        [Tooltip("Panel width in world units. Its height follows.")]
+        [SerializeField] private float healthWidth = 0.3f;
+        [Tooltip("Extra turn of the health panel, in degrees. Text upside down: Z 180. Mirrored: Y 180. Set it while NOT playing.")]
+        [SerializeField] private Vector3 healthRotation = Vector3.zero;
+        [Tooltip("Extra shift of the health panel, in the anchor's own axes (X right, Y up the lid).")]
+        [SerializeField] private Vector3 healthOffset = Vector3.zero;
+        [Tooltip("Where the orders note goes (the Comisar's current task). Empty = top right of the screen.")]
+        [SerializeField] private Transform ordersAnchor;
+        [SerializeField] private float ordersWidth = 0.25f;
+        [Tooltip("Extra turn of the orders panel, in degrees. Text upside down: Z 180. Mirrored: Y 180. Set it while NOT playing.")]
+        [SerializeField] private Vector3 ordersRotation = Vector3.zero;
+        [SerializeField] private Vector3 ordersOffset = Vector3.zero;
+
+        [Header("Orders")]
+        [SerializeField] private string ordersTitle = "ORDERS";
+        [SerializeField, TextArea] private string ordersBody = "Find the documents.";
+
+        private static readonly Vector2 HealthPanelSize = new(420f, 110f);
+        private static readonly Vector2 OrdersPanelSize = new(400f, 300f);
 
         private static readonly Color HpFine = new(0.25f, 0.95f, 0.4f);
         private static readonly Color HpCaution = new(0.95f, 0.8f, 0.2f);
         private static readonly Color HpDanger = new(0.95f, 0.2f, 0.15f);
+        private const float BarHeight = 44f;
         private const float BarBorder = 3f;
 
-        private GameObject _root;
+        private readonly List<GameObject> _worldPanels = new();
+        private GameObject _overlayRoot;
+
         private RectTransform _hpMask;
         private RawImage _hpFill;
         private Text _hpText;
         private Texture2D _hpTexture;
         private Text _xpText;
+        private Text _ordersTitleText;
+        private Text _ordersBodyText;
         private Text _nameText;
         private Text _descText;
         private Font _font;
         private EventBus _bus;
+        private bool _visible;
 
         private float _hpCurrent;
         private float _hpMax = 1f;
@@ -51,7 +87,7 @@ namespace Items
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             // Health published its first event in its own Start, possibly before this existed. Read it once.
-            if (inventory && inventory.TryGetComponent<Gameplay.Health>(out var health))
+            if (inventory && inventory.TryGetComponent<Health>(out var health))
             {
                 _hpCurrent = health.Current;
                 _hpMax = health.Max;
@@ -66,7 +102,7 @@ namespace Items
                 _bus.Subscribe<XpChangedEvent>(OnXpChanged);
             }
 
-            _root.SetActive(false);
+            SetVisible(false);
         }
 
         private void OnDestroy()
@@ -82,9 +118,14 @@ namespace Items
 
         public void SetVisible(bool visible)
         {
-            if (!_root) return;
+            _visible = visible;
 
-            _root.SetActive(visible);
+            if (_overlayRoot) _overlayRoot.SetActive(visible);
+            foreach (var panel in _worldPanels)
+            {
+                if (panel) panel.SetActive(visible);
+            }
+
             if (visible) _hpShown = _hpMax > 0f ? _hpCurrent / _hpMax : 0f; // no drain animation from a stale value
         }
 
@@ -94,6 +135,13 @@ namespace Items
 
             _nameText.text = title;
             _descText.text = body;
+        }
+
+        /// <summary>The current order from the Comisar. The Quest GUI will call this when the quest changes.</summary>
+        public void SetOrders(string title, string body)
+        {
+            if (_ordersTitleText) _ordersTitleText.text = title;
+            if (_ordersBodyText) _ordersBodyText.text = body;
         }
 
         private void OnHealthChanged(HealthChangedEvent e)
@@ -112,13 +160,13 @@ namespace Items
 
         private void Update()
         {
-            if (!_root || !_root.activeSelf) return;
+            if (!_visible || !_hpFill) return;
 
             var target = _hpMax > 0f ? Mathf.Clamp01(_hpCurrent / _hpMax) : 0f;
             _hpShown = Mathf.MoveTowards(_hpShown, target, Time.unscaledDeltaTime * 0.6f);
 
             // The mask clips the fill instead of squashing it, so the texture does not stretch as health drops.
-            var inner = barWidth - BarBorder * 2f;
+            var inner = HealthPanelSize.x - BarBorder * 2f;
             _hpMask.sizeDelta = new Vector2(inner * _hpShown, 0f);
 
             var low = 1f - target;
@@ -140,10 +188,11 @@ namespace Items
             _hpText.text = Mathf.CeilToInt(_hpCurrent).ToString();
         }
 
-        // ---------- building the canvas in code ----------
+        // ---------- building the canvases in code ----------
 
         private void Build()
         {
+            // The overlay: item text and the hint, always on the screen. It also hosts any panel without an anchor.
             var canvasGo = new GameObject("InventoryHudCanvas", typeof(Canvas), typeof(CanvasScaler));
             canvasGo.transform.SetParent(transform, false);
 
@@ -156,45 +205,74 @@ namespace Items
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = 0.5f;
 
-            _root = new GameObject("Root", typeof(RectTransform));
-            _root.transform.SetParent(canvasGo.transform, false);
-            Stretch(_root.GetComponent<RectTransform>());
+            _overlayRoot = new GameObject("Root", typeof(RectTransform));
+            _overlayRoot.transform.SetParent(canvasGo.transform, false);
+            Stretch(_overlayRoot.GetComponent<RectTransform>());
 
-            BuildHealthBar();
+            BuildHealthPanel(MakePanel("HealthPanel", healthAnchor, HealthPanelSize, healthWidth, healthRotation, healthOffset,
+                new Vector2(0f, 1f), new Vector2(80f, -70f)));
+            BuildOrdersPanel(MakePanel("OrdersPanel", ordersAnchor, OrdersPanelSize, ordersWidth, ordersRotation, ordersOffset,
+                new Vector2(1f, 1f), new Vector2(-80f, -70f)));
 
-            _xpText = MakeText(_root.transform, "XP  0", 34, TextAnchor.MiddleRight);
-            Anchor(_xpText.rectTransform, new Vector2(1f, 1f), new Vector2(-margin.x, -margin.y),
-                new Vector2(320f, 44f), new Vector2(1f, 1f));
-
-            var title = MakeText(_root.transform, "ITEMS", 38, TextAnchor.MiddleCenter);
-            Anchor(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -margin.y),
-                new Vector2(400f, 44f), new Vector2(0.5f, 1f));
-
-            _nameText = MakeText(_root.transform, "", 34, TextAnchor.MiddleCenter);
-            Anchor(_nameText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 190f),
+            _nameText = MakeText(_overlayRoot.transform, "", 34, TextAnchor.MiddleCenter);
+            Anchor(_nameText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 150f),
                 new Vector2(1000f, 46f), new Vector2(0.5f, 0f));
 
-            _descText = MakeText(_root.transform, "", 26, TextAnchor.UpperCenter);
+            _descText = MakeText(_overlayRoot.transform, "", 26, TextAnchor.UpperCenter);
             _descText.supportRichText = true;
-            Anchor(_descText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 90f),
-                new Vector2(1000f, 96f), new Vector2(0.5f, 0f));
+            Anchor(_descText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 70f),
+                new Vector2(1000f, 80f), new Vector2(0.5f, 0f));
 
-            var hint = MakeText(_root.transform, "LMB pick up / place     R rotate     RMB use     TAB close", 24,
-                TextAnchor.MiddleCenter);
+            var hint = MakeText(_overlayRoot.transform,
+                "LMB pick up / place     R rotate     RMB use     TAB close", 24, TextAnchor.MiddleCenter);
             hint.color = new Color(1f, 1f, 1f, 0.55f);
-            Anchor(hint.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 30f),
+            Anchor(hint.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 24f),
                 new Vector2(1400f, 40f), new Vector2(0.5f, 0f));
         }
 
-        private void BuildHealthBar()
+        /// <summary>
+        /// A panel of pixelSize pixels. With an anchor it is a world canvas on the lid, worldWidth wide; without one it
+        /// is a rectangle in a corner of the screen overlay.
+        /// </summary>
+        private RectTransform MakePanel(string panelName, Transform anchor, Vector2 pixelSize, float worldWidth,
+            Vector3 euler, Vector3 offset, Vector2 overlayCorner, Vector2 overlayOffset)
+        {
+            if (!anchor)
+            {
+                var go = new GameObject(panelName, typeof(RectTransform));
+                go.transform.SetParent(_overlayRoot.transform, false);
+                var rect = go.GetComponent<RectTransform>();
+                Anchor(rect, overlayCorner, overlayOffset, pixelSize, overlayCorner);
+                return rect;
+            }
+
+            var worldGo = new GameObject(panelName, typeof(Canvas));
+            worldGo.transform.SetParent(anchor, false);
+
+            var worldCanvas = worldGo.GetComponent<Canvas>();
+            worldCanvas.renderMode = RenderMode.WorldSpace;
+            worldCanvas.worldCamera = rig ? rig.Camera : null;
+
+            var worldRect = worldGo.GetComponent<RectTransform>();
+            worldRect.pivot = new Vector2(0.5f, 0.5f);
+            worldRect.sizeDelta = pixelSize;
+            worldRect.localPosition = offset;
+            worldRect.localRotation = Quaternion.Euler(euler);
+            worldRect.localScale = Vector3.one * (worldWidth / pixelSize.x);
+
+            _worldPanels.Add(worldGo);
+            return worldRect;
+        }
+
+        private void BuildHealthPanel(RectTransform panel)
         {
             var frame = new GameObject("HealthBar", typeof(RectTransform), typeof(Image));
-            frame.transform.SetParent(_root.transform, false);
+            frame.transform.SetParent(panel, false);
             var frameImage = frame.GetComponent<Image>();
             frameImage.color = new Color(0.35f, 0.4f, 0.35f, 1f);
             frameImage.raycastTarget = false;
-            Anchor(frameImage.rectTransform, new Vector2(0f, 1f), new Vector2(margin.x, -margin.y),
-                new Vector2(barWidth, barHeight), new Vector2(0f, 1f));
+            Anchor(frameImage.rectTransform, new Vector2(0.5f, 1f), Vector2.zero,
+                new Vector2(HealthPanelSize.x, BarHeight), new Vector2(0.5f, 1f));
 
             var back = new GameObject("Back", typeof(RectTransform), typeof(Image));
             back.transform.SetParent(frame.transform, false);
@@ -204,6 +282,7 @@ namespace Items
             Stretch(backImage.rectTransform, BarBorder);
 
             // The mask is as wide as the filled part. Its child keeps full width, so it is clipped, not squashed.
+            var innerWidth = HealthPanelSize.x - BarBorder * 2f;
             var maskGo = new GameObject("Mask", typeof(RectTransform), typeof(RectMask2D));
             maskGo.transform.SetParent(back.transform, false);
             _hpMask = maskGo.GetComponent<RectTransform>();
@@ -211,7 +290,7 @@ namespace Items
             _hpMask.anchorMax = new Vector2(0f, 1f);
             _hpMask.pivot = new Vector2(0f, 0.5f);
             _hpMask.anchoredPosition = Vector2.zero;
-            _hpMask.sizeDelta = new Vector2(barWidth - BarBorder * 2f, 0f);
+            _hpMask.sizeDelta = new Vector2(innerWidth, 0f);
 
             _hpTexture = MakeBarTexture();
             var fillGo = new GameObject("Fill", typeof(RectTransform), typeof(RawImage));
@@ -224,11 +303,51 @@ namespace Items
             fillRect.anchorMax = new Vector2(0f, 1f);
             fillRect.pivot = new Vector2(0f, 0.5f);
             fillRect.anchoredPosition = Vector2.zero;
-            fillRect.sizeDelta = new Vector2(barWidth - BarBorder * 2f, 0f);
+            fillRect.sizeDelta = new Vector2(innerWidth, 0f);
 
-            _hpText = MakeText(frame.transform, "", 22, TextAnchor.MiddleLeft);
+            _hpText = MakeText(frame.transform, "", 24, TextAnchor.MiddleLeft);
             Stretch(_hpText.rectTransform, 12f);
             _hpText.color = new Color(1f, 1f, 1f, 0.9f);
+
+            _xpText = MakeText(panel, "XP  0", 34, TextAnchor.MiddleLeft);
+            Anchor(_xpText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -BarHeight - 8f),
+                new Vector2(HealthPanelSize.x, 44f), new Vector2(0.5f, 1f));
+
+            FinishWorldPanel(panel);
+        }
+
+        private void BuildOrdersPanel(RectTransform panel)
+        {
+            // A sheet of paper pinned to the lid.
+            var paper = new GameObject("Paper", typeof(RectTransform), typeof(Image));
+            paper.transform.SetParent(panel, false);
+            var paperImage = paper.GetComponent<Image>();
+            paperImage.color = new Color(0.82f, 0.78f, 0.64f, 0.95f);
+            paperImage.raycastTarget = false;
+            Stretch(paperImage.rectTransform);
+
+            var ink = new Color(0.12f, 0.1f, 0.08f, 1f);
+
+            _ordersTitleText = MakeText(paper.transform, ordersTitle, 36, TextAnchor.MiddleCenter);
+            _ordersTitleText.color = ink;
+            Anchor(_ordersTitleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -16f),
+                new Vector2(OrdersPanelSize.x - 40f, 48f), new Vector2(0.5f, 1f));
+
+            _ordersBodyText = MakeText(paper.transform, ordersBody, 30, TextAnchor.UpperLeft);
+            _ordersBodyText.color = ink;
+            Anchor(_ordersBodyText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -76f),
+                new Vector2(OrdersPanelSize.x - 50f, OrdersPanelSize.y - 100f), new Vector2(0.5f, 1f));
+
+            FinishWorldPanel(panel);
+        }
+
+        /// <summary>A world panel is built after the rig set its layers, so move the new objects onto the inventory layer.</summary>
+        private void FinishWorldPanel(RectTransform panel)
+        {
+            if (rig && panel.GetComponent<Canvas>() != null)
+            {
+                SuitcaseRig.SetLayerRecursive(panel.gameObject, rig.Layer);
+            }
         }
 
         /// <summary>
@@ -301,6 +420,29 @@ namespace Items
             rect.pivot = pivot;
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
+        }
+
+        // ---------- editor help ----------
+
+        private void OnDrawGizmos()
+        {
+            DrawAnchorGizmo(healthAnchor, healthWidth, HealthPanelSize);
+            DrawAnchorGizmo(ordersAnchor, ordersWidth, OrdersPanelSize);
+        }
+
+        /// <summary>A rectangle the size of the panel, plus a blue line along +Z (which must point into the lid).</summary>
+        private static void DrawAnchorGizmo(Transform anchor, float worldWidth, Vector2 pixelSize)
+        {
+            if (!anchor) return;
+
+            var height = worldWidth * pixelSize.y / pixelSize.x;
+            Gizmos.matrix = Matrix4x4.TRS(anchor.position, anchor.rotation, Vector3.one);
+
+            Gizmos.color = new Color(1f, 1f, 1f, 0.9f);
+            Gizmos.DrawWireCube(Vector3.zero, new Vector3(worldWidth, height, 0.001f));
+
+            Gizmos.color = new Color(0.3f, 0.5f, 1f, 0.9f);
+            Gizmos.DrawLine(Vector3.zero, new Vector3(0f, 0f, worldWidth * 0.3f));
         }
     }
 }

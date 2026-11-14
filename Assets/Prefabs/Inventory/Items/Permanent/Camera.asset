@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fa4e7384246c3f4284dd23eb7fc9e84, type: 3}
+  m_Name: Camera
+  m_EditorClassIdentifier: Assembly-CSharp::Items.ItemDefinition
+  id: camera
+  displayName: Camera
+  description: 'ExaktaVX-SOV, is a medium format SLR film camera manufactured by
+    Ihagee. Extremely customisable. '
+  icon: {fileID: 0}
+  inventoryModel: {fileID: 86234500449042144, guid: 6725ee1ea8258fd44bb9d30dcdd5db06, type: 3}
+  category: 1
+  width: 2
+  height: 2
+  maxStack: 1
+  effect: {fileID: 0}

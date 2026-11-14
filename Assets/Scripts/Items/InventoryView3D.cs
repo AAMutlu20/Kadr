@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Gameplay;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Weapons;
 
 namespace Items
 {
@@ -11,32 +10,43 @@ namespace Items
     ///
     /// Controls while open:
     ///   Left click   pick up the item under the cursor (it follows the mouse), click again to put it down.
-    ///                Dropping onto a stack of the same item merges them.
-    ///   R            rotate the held item (the ghost on the grid is green when it fits, red when it does not)
+    ///                Dropping onto a stack of the same item merges them. On the album it opens the upgrades.
+    ///   R            rotate the held item (the ghost is green when it fits, red when it does not)
     ///   Right click  use the item under the cursor, or put back the item you are holding
     ///   Esc / Tab    close
     ///
-    /// Model and view are separate. <see cref="InventoryGrid"/> decides what is where. This class only draws it as
-    /// 3D objects inside <see cref="SuitcaseRig"/> and turns mouse input into grid calls (TryMove, TryMerge, TryUse).
-    /// Cells are found by a ray against the grid plane plus maths, not by trigger colliders, so there is no physics
-    /// timing to go wrong and the cost does not grow with the number of cells.
+    /// Two compartments: consumables go in the bottom half of the case, permanent items in the lid. An item can only
+    /// be placed in the grid of its own category, so a held potion over the lid shows a red ghost.
     ///
-    /// The world keeps running while it is open (real time). Only the player's own input is switched off.
+    /// Model and view are separate. The <see cref="InventoryGrid"/>s decide what is where. This class only draws it
+    /// as 3D objects and turns mouse input into grid calls (TryMove, TryMerge, TryUse). Cells are found with a ray
+    /// against each zone's plane plus maths, not with trigger colliders.
+    ///
+    /// Item objects are driven in WORLD space from their zone every frame, so items on the lid swing with the lid
+    /// while it opens and closes.
+    ///
+    /// The game is PAUSED while it is open (Time.timeScale = 0) and resumes when it closes. Everything here therefore
+    /// uses unscaled time. Pausing does not stop code that reads the mouse directly, so WeaponController must ignore
+    /// input while Time.timeScale is 0 (one line at the top of its Update), or a click on an item would fire the gun.
     /// </summary>
     public class InventoryView3D : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private Inventory inventory;
         [SerializeField] private SuitcaseRig rig;
-        [Tooltip("Optional. Health, XP and the item text on screen.")]
+        [Tooltip("Optional. Health, XP, orders and the item text.")]
         [SerializeField] private InventoryHud hud;
+
+        [Header("Pause")]
+        [Tooltip("Freeze the game (Time.timeScale = 0) while the inventory is open.")]
+        [SerializeField] private bool pauseGame = true;
 
         [Header("Feel")]
         [Tooltip("Seconds after opening before clicks work, so the lid has time to open.")]
         [SerializeField] private float openDelay = 0.6f;
         [Tooltip("Seconds the camera stays on after closing, so the lid is seen closing.")]
         [SerializeField] private float closeDelay = 0.4f;
-        [Tooltip("Height of an item resting in the suitcase, in the rig's units.")]
+        [Tooltip("Height of an item resting on its surface, in the zone's units.")]
         [SerializeField] private float restLift = 0.005f;
         [Tooltip("Height of the item you are holding. Higher = clearly above the other items.")]
         [SerializeField] private float heldLift = 0.06f;
@@ -51,7 +61,10 @@ namespace Items
 
         [Header("Stack count text")]
         [SerializeField] private float countTextSize = 0.012f;
-        [SerializeField] private float countTextHeight = 0.05f;
+        [Tooltip("Height of the number above the item's surface.")]
+        [SerializeField] private float countLift = 0f;
+        [Tooltip("Scale of the number object. Tuned in play mode: 0.3 looked right.")]
+        [SerializeField] private float countScale = 0.3f;
 
         private static readonly Color GhostOk = new(0.3f, 1f, 0.4f, 0.4f);
         private static readonly Color GhostBad = new(1f, 0.25f, 0.25f, 0.4f);
@@ -59,28 +72,33 @@ namespace Items
         private class ItemView
         {
             public ItemStack Stack;
-            public Transform Root;   // sits at the centre of the footprint, never rotates
+            public InventoryZone Zone;
+            public Transform Root;   // driven in world space, at the centre of the footprint
             public Transform Pivot;  // holds the model and turns 90 degrees when rotated
             public Transform Label;
             public TextMesh LabelText;
-            public Vector3 TargetPos;
-            public Quaternion TargetRot = Quaternion.identity;
+            public bool Easing;      // gliding to a new place; otherwise it is simply glued to its zone
         }
 
         private readonly Dictionary<ItemStack, ItemView> _views = new();
+        private readonly Dictionary<ItemCategory, InventoryZone> _zones = new();
 
         private PlayerController _player;
-        private WeaponController _weapons;
         private Health _health;
         private Font _font;
 
         private Transform _ghost;
         private Material _ghostMaterial;
 
+        private InventoryHotspot _hotspot;
+
         private bool _open;
         private float _readyAt;
+        private float _savedTimeScale = 1f;
         private ItemStack _held;
         private bool _heldRotated;
+        private InventoryZone _heldZone;  // the zone the held item last hovered, for its tilt
+        private Vector3 _heldWorld;       // where the held item floats, in world space
 
         private void Start()
         {
@@ -91,25 +109,57 @@ namespace Items
                 return;
             }
 
-            if (!rig.Matches(inventory.Grid))
+            foreach (var zone in rig.Zones)
             {
-                Debug.LogWarning("[InventoryView3D] The rig's columns/rows do not match the Inventory's width/height. " +
-                                 "Cells will be misaligned.", this);
+                if (!zone) continue;
+
+                if (_zones.ContainsKey(zone.Category))
+                {
+                    Debug.LogWarning($"[InventoryView3D] Two zones use the category {zone.Category}. Only the first is used.", zone);
+                    continue;
+                }
+
+                if (!zone.Bind(inventory.GridFor(zone.Category)))
+                {
+                    Debug.LogWarning($"[InventoryView3D] Zone '{zone.name}' columns/rows do not match the Inventory's " +
+                                     $"{zone.Category} grid size. Cells will be misaligned.", zone);
+                }
+
+                _zones[zone.Category] = zone;
+                zone.BuildGridVisual(rig.Layer);
+            }
+
+            foreach (ItemCategory category in System.Enum.GetValues(typeof(ItemCategory)))
+            {
+                if (!_zones.ContainsKey(category))
+                {
+                    Debug.LogError($"[InventoryView3D] The rig has no zone for the {category} category.", this);
+                }
             }
 
             _player = inventory.GetComponent<PlayerController>();
             _health = inventory.GetComponent<Health>();
-            _weapons = FindAnyObjectByType<WeaponController>();
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             BuildGhost();
-            inventory.Grid.Changed += Sync;
+
+            foreach (var grid in inventory.Grids) grid.Changed += Sync;
             Sync();
+        }
+
+        private void OnDisable()
+        {
+            // Never leave the game frozen if this object is disabled or destroyed while the inventory is open.
+            if (_open && pauseGame) Time.timeScale = _savedTimeScale;
         }
 
         private void OnDestroy()
         {
-            if (inventory && inventory.Grid != null) inventory.Grid.Changed -= Sync;
+            if (inventory && inventory.Grids != null)
+            {
+                foreach (var grid in inventory.Grids) grid.Changed -= Sync;
+            }
+
             if (_ghostMaterial) Destroy(_ghostMaterial);
         }
 
@@ -142,47 +192,87 @@ namespace Items
                 return;
             }
 
-            if (Time.time < _readyAt) return;
+            if (Time.unscaledTime < _readyAt) return;
 
-            var screen = mouse.position.ReadValue();
-            var hasPoint = rig.TryRaycast(screen, 0f, out var local);
-            var over = hasPoint && rig.TryGetCell(local, inventory.Grid, out _, out _);
+            var ray = rig.Camera.ScreenPointToRay(mouse.position.ReadValue());
+
+            // Which zone is the pointer over, and which cell of it?
+            var zone = FindZoneUnderPointer(ray, out var local);
+            var overCell = false;
             var cx = 0;
             var cy = 0;
-            if (over) rig.TryGetCell(local, inventory.Grid, out cx, out cy);
+            if (zone) overCell = zone.TryGetCell(local, out cx, out cy);
+
+            UpdateHotspot(ray);
 
             // R: rotate the held item. A square item has no point in turning.
             if (kb.rKey.wasPressedThisFrame && _held != null && _held.Definition.Width != _held.Definition.Height)
             {
                 _heldRotated = !_heldRotated;
-                ApplyTargets(_views[_held]);
+                ApplyLabelAndCount(_views[_held]);
             }
 
-            // The held item follows the mouse, floating above the grid.
-            if (_held != null && rig.TryRaycast(screen, heldLift, out var heldLocal))
+            // The held item follows the mouse, floating above the zone it is over.
+            if (_held != null && zone && zone.TryRaycast(ray, heldLift, out var lifted))
             {
-                _views[_held].TargetPos = heldLocal;
+                _heldWorld = zone.transform.TransformPoint(lifted);
+                _heldZone = zone;
             }
 
             if (mouse.leftButton.wasPressedThisFrame)
             {
                 if (_held == null)
                 {
-                    if (over) PickUp(cx, cy);
+                    if (_hotspot) _hotspot.Click();
+                    else if (zone && overCell) PickUp(zone, cx, cy);
                 }
-                else if (hasPoint)
+                else if (zone)
                 {
-                    Drop(local, over, cx, cy);
+                    Drop(zone, local, overCell, cx, cy);
                 }
             }
 
             if (mouse.rightButton.wasPressedThisFrame)
             {
                 if (_held != null) CancelHold();
-                else if (over) inventory.TryUse(inventory.Grid.GetAt(cx, cy));
+                else if (zone && overCell) inventory.TryUse(zone.Grid.GetAt(cx, cy));
             }
 
-            UpdateGhostAndInfo(hasPoint, local, over, cx, cy);
+            UpdateGhostAndInfo(zone, local, overCell, cx, cy);
+        }
+
+        /// <summary>The first zone whose rectangle the pointer is over. Each zone is a plane in 3D, so each gets its own ray test.</summary>
+        private InventoryZone FindZoneUnderPointer(Ray ray, out Vector3 local)
+        {
+            foreach (var zone in _zones.Values)
+            {
+                if (zone.TryRaycast(ray, 0f, out local) && zone.Contains(local)) return zone;
+            }
+
+            local = default;
+            return null;
+        }
+
+        private void UpdateHotspot(Ray ray)
+        {
+            InventoryHotspot hit = null;
+
+            // The lid is moved by the Animator, but colliders only follow their transform when physics runs, and
+            // physics does not run while the game is paused. Sync by hand or the album's box stays where the lid was.
+            Physics.SyncTransforms();
+
+            // Not while carrying an item: clicking then always means "put it down".
+            if (_held == null &&
+                Physics.Raycast(ray, out var info, 100f, 1 << rig.Layer, QueryTriggerInteraction.Collide))
+            {
+                hit = info.collider.GetComponentInParent<InventoryHotspot>();
+            }
+
+            if (hit == _hotspot) return;
+
+            if (_hotspot) _hotspot.SetHover(false);
+            _hotspot = hit;
+            if (_hotspot) _hotspot.SetHover(true);
         }
 
         // ---------- open and close ----------
@@ -193,14 +283,19 @@ namespace Items
 
             _open = true;
             inventory.IsOpen = true;
-            _readyAt = Time.time + openDelay;
+            _readyAt = Time.unscaledTime + openDelay;
 
             rig.SetOpen(true);
             if (hud) hud.SetVisible(true);
 
-            // Freeze the player's own input but not the world: enemies still come for you.
+            // Freeze the player's own input, and the world with it.
             if (_player) _player.InputEnabled = false;
-            if (_weapons) _weapons.InputEnabled = false;
+
+            if (pauseGame)
+            {
+                _savedTimeScale = Time.timeScale;
+                Time.timeScale = 0f;
+            }
 
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
@@ -211,19 +306,21 @@ namespace Items
             _open = false;
             inventory.IsOpen = false;
 
-            // Whatever was held goes back to its spot. It never left the grid, so nothing is lost.
-            var wasHeld = _held;
-            _held = null;
-            if (wasHeld != null && _views.TryGetValue(wasHeld, out var view)) ApplyTargets(view);
+            // Whatever was held goes back to its spot. It never left its grid, so nothing is lost.
+            ReleaseHeld();
+
+            if (_hotspot) _hotspot.SetHover(false);
+            _hotspot = null;
 
             rig.SetOpen(false, closeDelay);
             if (hud) hud.SetVisible(false);
             if (_ghost) _ghost.gameObject.SetActive(false);
 
+            if (pauseGame) Time.timeScale = _savedTimeScale;
+
             // A dead player keeps input off, so closing must not switch anything back on.
             var dead = _health && _health.IsDead;
             if (_player && !dead) _player.InputEnabled = true;
-            if (_weapons && !dead) _weapons.InputEnabled = true;
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
@@ -231,73 +328,85 @@ namespace Items
 
         // ---------- picking up and putting down ----------
 
-        private void PickUp(int cx, int cy)
+        private void PickUp(InventoryZone zone, int cx, int cy)
         {
-            var stack = inventory.Grid.GetAt(cx, cy);
-            if (stack == null) return;
+            var stack = zone.Grid.GetAt(cx, cy);
+            if (stack == null || !_views.TryGetValue(stack, out var view)) return;
 
             _held = stack;
             _heldRotated = stack.Rotated;
-            ApplyTargets(_views[stack]);
+            _heldZone = view.Zone;
+            _heldWorld = view.Root.position;
+            view.Easing = true;
+            ApplyLabelAndCount(view);
         }
 
-        private void Drop(Vector3 local, bool over, int cx, int cy)
+        private void Drop(InventoryZone zone, Vector3 local, bool overCell, int cx, int cy)
         {
-            var w = _heldRotated ? _held.Definition.Height : _held.Definition.Width;
-            var h = _heldRotated ? _held.Definition.Width : _held.Definition.Height;
-            rig.AnchorFromPoint(local, w, h, out var ax, out var ay);
-
             var stack = _held;
 
-            if (inventory.Grid.TryMove(stack, ax, ay, _heldRotated))
+            // The wrong compartment: the ghost is red there, and nothing happens.
+            if (zone.Category != stack.Definition.Category) return;
+
+            var w = _heldRotated ? stack.Definition.Height : stack.Definition.Width;
+            var h = _heldRotated ? stack.Definition.Width : stack.Definition.Height;
+            zone.AnchorFromPoint(local, w, h, out var ax, out var ay);
+
+            if (zone.Grid.TryMove(stack, ax, ay, _heldRotated))
             {
-                _held = null;
-                if (_views.TryGetValue(stack, out var view)) ApplyTargets(view);
+                ReleaseHeld();
                 return;
             }
 
             // Not free: if the cell under the cursor holds the same stackable item, pour into it.
-            if (!over) return;
+            if (!overCell) return;
 
-            var other = inventory.Grid.GetAt(cx, cy);
-            if (other != null && inventory.Grid.TryMerge(stack, other))
+            var other = zone.Grid.GetAt(cx, cy);
+            if (other != null && zone.Grid.TryMerge(stack, other))
             {
-                _held = null;
-
                 // A partial merge leaves the stack alive with fewer items: send it back to its cells.
-                if (_views.TryGetValue(stack, out var view)) ApplyTargets(view);
+                ReleaseHeld(stack);
             }
         }
 
         /// <summary>
-        /// Right click while holding. The held stack never left the grid (it only moves on a successful drop),
+        /// Right click while holding. The held stack never left its grid (it only moves on a successful drop),
         /// so putting it back just forgets the pending move and the rotation.
         /// </summary>
-        private void CancelHold()
+        private void CancelHold() => ReleaseHeld();
+
+        private void ReleaseHeld() => ReleaseHeld(_held);
+
+        private void ReleaseHeld(ItemStack stack)
         {
-            var stack = _held;
             _held = null;
-            if (stack != null && _views.TryGetValue(stack, out var view)) ApplyTargets(view);
+
+            if (stack != null && _views.TryGetValue(stack, out var view))
+            {
+                view.Easing = true; // glide from the cursor to the cells
+                ApplyLabelAndCount(view);
+            }
         }
 
         // ---------- the 3D items ----------
 
-        /// <summary>Makes the views match the grid: creates the new ones, removes the ones whose stack is gone.</summary>
+        /// <summary>Makes the views match the grids: creates the new ones, removes the ones whose stack is gone.</summary>
         private void Sync()
         {
-            var grid = inventory.Grid;
-
-            foreach (var stack in grid.Stacks)
+            foreach (var grid in inventory.Grids)
             {
-                if (_views.TryGetValue(stack, out var existing))
+                foreach (var stack in grid.Stacks)
                 {
-                    ApplyTargets(existing);
-                }
-                else
-                {
-                    var view = CreateView(stack);
-                    _views[stack] = view;
-                    ApplyTargets(view, true);
+                    if (_views.TryGetValue(stack, out var existing))
+                    {
+                        ApplyLabelAndCount(existing);
+                    }
+                    else if (_zones.TryGetValue(stack.Definition.Category, out var zone))
+                    {
+                        var view = CreateView(stack, zone);
+                        _views[stack] = view;
+                        ApplyLabelAndCount(view);
+                    }
                 }
             }
 
@@ -323,71 +432,101 @@ namespace Items
 
         private bool ContainsStack(ItemStack stack)
         {
-            foreach (var s in inventory.Grid.Stacks)
+            foreach (var grid in inventory.Grids)
             {
-                if (s == stack) return true;
+                foreach (var s in grid.Stacks)
+                {
+                    if (s == stack) return true;
+                }
             }
 
             return false;
         }
 
-        /// <summary>Sets where a view wants to be and how it wants to be turned. snap = jump there at once.</summary>
-        private void ApplyTargets(ItemView v, bool snap = false)
+        /// <summary>Updates the stack count text and its corner, which depend on the count and the rotation.</summary>
+        private void ApplyLabelAndCount(ItemView v)
         {
             var s = v.Stack;
-            var held = s == _held;
-            var rotated = held ? _heldRotated : s.Rotated;
+            var rotated = s == _held ? _heldRotated : s.Rotated;
             var w = rotated ? s.Definition.Height : s.Definition.Width;
             var h = rotated ? s.Definition.Width : s.Definition.Height;
-            var cell = rig.CellSize;
-
-            v.TargetRot = Quaternion.Euler(0f, rotated ? 90f : 0f, 0f);
-
-            // The held item's position comes from the mouse every frame, so only resting items get a target here.
-            if (!held) v.TargetPos = rig.FootprintCenter(s.X, s.Y, w, h, restLift);
-
-            if (snap)
-            {
-                v.Root.localPosition = v.TargetPos;
-                v.Pivot.localRotation = v.TargetRot;
-            }
+            var cell = v.Zone.CellSize;
 
             var showCount = s.Count > 1;
             v.Label.gameObject.SetActive(showCount);
-            if (showCount)
-            {
-                v.LabelText.text = s.Count.ToString();
-                // Lower right corner of the footprint, in the root's own (unrotated) space.
-                v.Label.localPosition = new Vector3(w * cell * 0.5f - cell * 0.1f, countTextHeight, -h * cell * 0.5f + cell * 0.1f);
-            }
+            if (!showCount) return;
+
+            v.LabelText.text = s.Count.ToString();
+
+            // Lower right corner of the footprint, in the root's own (unrotated) space.
+            v.Label.localPosition = new Vector3(w * cell * 0.5f - cell * 0.1f, countLift, -h * cell * 0.5f + cell * 0.1f);
         }
 
+        /// <summary>
+        /// Moves every item to where it belongs, in world space, every frame. Resting items are glued to their zone,
+        /// so they follow the lid while it swings. An item that was just dropped or put back glides there first.
+        /// </summary>
         private void AnimateViews()
         {
-            var t = 1f - Mathf.Exp(-moveSharpness * Time.deltaTime);
+            var t = 1f - Mathf.Exp(-moveSharpness * Time.unscaledDeltaTime); // unscaled: the game is paused
 
             foreach (var view in _views.Values)
             {
-                view.Root.localPosition = Vector3.Lerp(view.Root.localPosition, view.TargetPos, t);
-                view.Pivot.localRotation = Quaternion.Slerp(view.Pivot.localRotation, view.TargetRot, t);
+                var s = view.Stack;
+                var held = s == _held;
+                var zone = held && _heldZone ? _heldZone : view.Zone;
+                var rotated = held ? _heldRotated : s.Rotated;
+
+                Vector3 targetPos;
+                if (held)
+                {
+                    targetPos = _heldWorld;
+                }
+                else
+                {
+                    var w = rotated ? s.Definition.Height : s.Definition.Width;
+                    var h = rotated ? s.Definition.Width : s.Definition.Height;
+                    targetPos = view.Zone.transform.TransformPoint(view.Zone.FootprintCenter(s.X, s.Y, w, h, restLift));
+                }
+
+                var targetRot = zone.transform.rotation;
+
+                if (held || view.Easing)
+                {
+                    view.Root.position = Vector3.Lerp(view.Root.position, targetPos, t);
+                    view.Root.rotation = Quaternion.Slerp(view.Root.rotation, targetRot, t);
+
+                    if (!held && (view.Root.position - targetPos).sqrMagnitude < 1e-8f) view.Easing = false;
+                }
+                else
+                {
+                    view.Root.SetPositionAndRotation(targetPos, targetRot);
+                }
+
+                // The zone may sit under a scaled object (the lid), so the item takes on that scale.
+                view.Root.localScale = zone.transform.lossyScale;
+
+                var pivotRot = Quaternion.Euler(0f, rotated ? 90f : 0f, 0f);
+                view.Pivot.localRotation = Quaternion.Slerp(view.Pivot.localRotation, pivotRot, t);
             }
         }
 
-        private ItemView CreateView(ItemStack stack)
+        private ItemView CreateView(ItemStack stack, InventoryZone zone)
         {
             var def = stack.Definition;
 
             var root = new GameObject(def.DisplayName).transform;
-            root.SetParent(rig.GridOrigin, false);
+            root.SetParent(rig.transform, false);
 
             var pivot = new GameObject("Pivot").transform;
             pivot.SetParent(root, false);
 
-            BuildModel(def, pivot);
+            BuildModel(def, pivot, zone.CellSize);
 
             var labelGo = new GameObject("Count");
             labelGo.transform.SetParent(root, false);
             labelGo.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); // lie flat, readable from above
+            labelGo.transform.localScale = Vector3.one * countScale;
 
             var text = labelGo.AddComponent<TextMesh>();
             text.font = _font;
@@ -400,17 +539,25 @@ namespace Items
 
             SuitcaseRig.SetLayerRecursive(root.gameObject, rig.Layer);
 
-            return new ItemView { Stack = stack, Root = root, Pivot = pivot, Label = labelGo.transform, LabelText = text };
+            // Start in place: no glide from the middle of nowhere.
+            var w = stack.Width;
+            var h = stack.Height;
+            root.SetPositionAndRotation(
+                zone.transform.TransformPoint(zone.FootprintCenter(stack.X, stack.Y, w, h, restLift)),
+                zone.transform.rotation);
+            pivot.localRotation = Quaternion.Euler(0f, stack.Rotated ? 90f : 0f, 0f);
+
+            return new ItemView { Stack = stack, Zone = zone, Root = root, Pivot = pivot, Label = labelGo.transform, LabelText = text };
         }
 
         /// <summary>
         /// Puts the item's model under the pivot, scaled to fill its footprint. The scale is worked out on a copy at
         /// the world origin, so the suitcase's own position and rotation can never skew the measurement.
         /// </summary>
-        private void BuildModel(ItemDefinition def, Transform pivot)
+        private void BuildModel(ItemDefinition def, Transform pivot, float cellSize)
         {
-            var targetW = def.Width * rig.CellSize;
-            var targetD = def.Height * rig.CellSize;
+            var targetW = def.Width * cellSize;
+            var targetD = def.Height * cellSize;
 
             if (def.InventoryModel)
             {
@@ -452,10 +599,10 @@ namespace Items
 
             var hash = Mathf.Abs(def.Id.GetHashCode());
             var tint = Color.HSVToRGB((hash % 100) / 100f, 0.45f, 0.65f);
-            var block2 = new MaterialPropertyBlock();
-            block2.SetColor("_BaseColor", tint); // URP Lit and Unlit
-            block2.SetColor("_Color", tint);     // built in shaders
-            rend.SetPropertyBlock(block2);
+            var props = new MaterialPropertyBlock();
+            props.SetColor("_BaseColor", tint); // URP Lit and Unlit
+            props.SetColor("_Color", tint);     // built in shaders
+            rend.SetPropertyBlock(props);
         }
 
         // ---------- the placement ghost ----------
@@ -466,8 +613,7 @@ namespace Items
             Destroy(quad.GetComponent<Collider>());
 
             _ghost = quad.transform;
-            _ghost.SetParent(rig.GridOrigin, false);
-            _ghost.localRotation = Quaternion.Euler(90f, 0f, 0f); // a quad faces -Z, this lays it face up
+            _ghost.SetParent(rig.transform, false);
 
             _ghostMaterial = ghostMaterial
                 ? new Material(ghostMaterial)
@@ -478,9 +624,9 @@ namespace Items
             quad.SetActive(false);
         }
 
-        private void UpdateGhostAndInfo(bool hasPoint, Vector3 local, bool over, int cx, int cy)
+        private void UpdateGhostAndInfo(InventoryZone zone, Vector3 local, bool overCell, int cx, int cy)
         {
-            var shown = _held ?? (over ? inventory.Grid.GetAt(cx, cy) : null);
+            var shown = _held ?? (zone && overCell ? zone.Grid.GetAt(cx, cy) : null);
 
             if (hud)
             {
@@ -491,13 +637,17 @@ namespace Items
                     var body = def.Description + (def.Effect ? "\n<color=#8fbf8f>Right click: use</color>" : "");
                     hud.ShowInfo(title, body);
                 }
+                else if (_hotspot)
+                {
+                    hud.ShowInfo(_hotspot.Label, "");
+                }
                 else
                 {
                     hud.ShowInfo("", "");
                 }
             }
 
-            if (_held == null || !hasPoint || !over)
+            if (_held == null || !zone)
             {
                 _ghost.gameObject.SetActive(false);
                 return;
@@ -505,18 +655,23 @@ namespace Items
 
             var w = _heldRotated ? _held.Definition.Height : _held.Definition.Width;
             var h = _heldRotated ? _held.Definition.Width : _held.Definition.Height;
-            rig.AnchorFromPoint(local, w, h, out var ax, out var ay);
+            zone.AnchorFromPoint(local, w, h, out var ax, out var ay);
 
-            var fits = inventory.Grid.CanPlace(_held.Definition, ax, ay, _heldRotated, _held);
-            var mergeable = !fits && inventory.Grid.GetAt(cx, cy) is { } o && o != _held
+            var rightCompartment = zone.Category == _held.Definition.Category;
+            var fits = rightCompartment && zone.Grid.CanPlace(_held.Definition, ax, ay, _heldRotated, _held);
+            var mergeable = rightCompartment && !fits && overCell && zone.Grid.GetAt(cx, cy) is { } o && o != _held
                             && o.Definition == _held.Definition && o.Count < o.Definition.MaxStack;
 
-            var color = fits || mergeable ? GhostOk : GhostBad;
-            _ghostMaterial.color = color;
+            _ghostMaterial.color = fits || mergeable ? GhostOk : GhostBad;
 
+            var zt = zone.transform;
             _ghost.gameObject.SetActive(true);
-            _ghost.localPosition = rig.FootprintCenter(ax, ay, w, h, 0.002f);
-            _ghost.localScale = new Vector3(w * rig.CellSize, h * rig.CellSize, 1f);
+
+            // A quad faces -Z, so turning it 90 degrees about X lays it face up on the zone's surface.
+            _ghost.SetPositionAndRotation(
+                zt.TransformPoint(zone.FootprintCenter(ax, ay, w, h, 0.002f)),
+                zt.rotation * Quaternion.Euler(90f, 0f, 0f));
+            _ghost.localScale = new Vector3(w * zone.CellSize * zt.lossyScale.x, h * zone.CellSize * zt.lossyScale.z, 1f);
         }
     }
 }

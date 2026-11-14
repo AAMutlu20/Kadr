@@ -1,8 +1,15 @@
-The Character, Pistol and Shotgun animations were done by Cristian David Duque Camacho, find them here:
+The Character, Pistol and Shotgun animations were done by Cristian David Duque Camacho on Sketchfab:
 "FPS Character Animation Pack Pistol" (https://skfb.ly/pxGWx) by Cristian David Duque Camacho is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
 
 "FPS Character Animation Pack Saps-12" () by Cristian David Duque Camacho is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
 
 Gun and Explosion particles were made by Kenney in Particle Pack: https://kenney.nl/assets/particle-pack.
 
+Photo Album was made by Jacob Smith on Sketchfab:
+"Soviet Book Var. 3" (https://skfb.ly/oSFNP) by Jacob Smith is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
 
+Bandage model was made by 3dmodelsst on Sketchfab:
+"Bandage" (https://skfb.ly/oRTVN) by 3dmodelsst is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+
+Player camera (Exakta) model was made by Ilgis (Dolgov) Fatykhov on Sketchfab:
+"Vintage Camera Exakta VX 1954" (https://skfb.ly/ovH8G) by Ilgis (Dolgov) Fatykhov is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).

@@ -103,6 +103,10 @@ namespace Weapons
 
         private void Update()
         {
+            // Game is paused (inventory open, pause menu...). Mouse and keys are read directly
+            // here, so without this a click on an inventory item would also fire the weapon.
+            if (Time.timeScale == 0f) return;
+
             foreach (var weapon in _weapons)
             {
                 weapon.Tick(Time.deltaTime);
