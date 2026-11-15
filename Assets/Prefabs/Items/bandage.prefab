@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1782454187292037532}
   - component: {fileID: 1525842101152803263}
-  m_Layer: 11
+  m_Layer: 0
   m_Name: bandage.ogf 00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -102,7 +102,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2081977158809211944}
-  m_Layer: 11
+  m_Layer: 0
   m_Name: bone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -136,7 +136,7 @@ GameObject:
   - component: {fileID: 5291666503747542523}
   - component: {fileID: 3157654596045661593}
   - component: {fileID: 4594736894384656794}
-  m_Layer: 11
+  m_Layer: 0
   m_Name: bandage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -205,7 +205,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7703777142083747256}
-  m_Layer: 11
+  m_Layer: 0
   m_Name: bandage.ogf
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -237,7 +237,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1763905234285153476}
-  m_Layer: 11
+  m_Layer: 0
   m_Name: bone_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
