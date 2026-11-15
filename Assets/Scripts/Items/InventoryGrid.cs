@@ -119,6 +119,59 @@ namespace Items
             return true;
         }
 
+        public bool Contains(ItemStack stack) => _stacks.Contains(stack);
+
+        /// <summary>
+        /// Takes 'amount' items out of a stack and hands them back as a NEW stack that is on no grid yet: the piece
+        /// the player holds after a middle click. Null if the split makes no sense (nothing would stay behind).
+        /// </summary>
+        public ItemStack Split(ItemStack stack, int amount)
+        {
+            if (amount <= 0 || amount >= stack.Count) return null;
+
+            stack.Count -= amount;
+            var piece = new ItemStack
+            {
+                Definition = stack.Definition, Count = amount, X = stack.X, Y = stack.Y, Rotated = stack.Rotated
+            };
+
+            Changed?.Invoke();
+            return piece;
+        }
+
+        /// <summary>Puts a split-off piece on the grid. False if it does not fit there.</summary>
+        public bool TryPlaceDetached(ItemStack piece, int x, int y, bool rotated)
+        {
+            if (_stacks.Contains(piece) || !CanPlace(piece.Definition, x, y, rotated)) return false;
+
+            piece.X = x;
+            piece.Y = y;
+            piece.Rotated = rotated;
+            _stacks.Add(piece);
+            Fill(piece);
+
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>
+        /// Pours a split-off piece (on no grid) into a stack that is on the grid. Returns how many moved.
+        /// The piece is never removed here, it is the caller's to throw away when it reaches zero.
+        /// </summary>
+        public int MergeDetached(ItemStack piece, ItemStack into)
+        {
+            if (_stacks.Contains(piece) || piece.Definition != into.Definition) return 0;
+
+            var moved = Math.Min(into.Definition.MaxStack - into.Count, piece.Count);
+            if (moved <= 0) return 0;
+
+            into.Count += moved;
+            piece.Count -= moved;
+
+            Changed?.Invoke();
+            return moved;
+        }
+
         /// <summary>Takes items out of a stack, removing the stack when it reaches zero.</summary>
         public void RemoveCount(ItemStack stack, int amount)
         {

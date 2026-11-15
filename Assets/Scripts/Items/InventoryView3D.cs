@@ -97,6 +97,8 @@ namespace Items
         private float _savedTimeScale = 1f;
         private ItemStack _held;
         private bool _heldRotated;
+        private bool _heldDetached;       // the held stack is a piece split off another stack, on no grid yet
+        private ItemStack _splitSource;   // the stack the piece came from, where it goes back to if cancelled
         private InventoryZone _heldZone;  // the zone the held item last hovered, for its tilt
         private Vector3 _heldWorld;       // where the held item floats, in world space
 
@@ -232,6 +234,12 @@ namespace Items
                 }
             }
 
+            // Middle click: take half of a stack (rounded down, at least one) and hold it.
+            if (mouse.middleButton.wasPressedThisFrame && _held == null && zone && overCell)
+            {
+                SplitStack(zone, cx, cy);
+            }
+
             if (mouse.rightButton.wasPressedThisFrame)
             {
                 if (_held != null) CancelHold();
@@ -341,12 +349,102 @@ namespace Items
             ApplyLabelAndCount(view);
         }
 
+        /// <summary>
+        /// Middle click on a stack of two or more: half of it comes off and is held. The piece is a new stack that
+        /// is on no grid yet. It lands on a free spot, pours into another stack of the same item, or goes back.
+        /// </summary>
+        private void SplitStack(InventoryZone zone, int cx, int cy)
+        {
+            var source = zone.Grid.GetAt(cx, cy);
+            if (source == null || source.Count < 2 || !_views.TryGetValue(source, out var sourceView)) return;
+
+            var piece = zone.Grid.Split(source, Mathf.Max(1, source.Count / 2));
+            if (piece == null) return;
+
+            var view = CreateView(piece, sourceView.Zone);
+            _views[piece] = view;
+
+            _held = piece;
+            _heldDetached = true;
+            _splitSource = source;
+            _heldRotated = piece.Rotated;
+            _heldZone = sourceView.Zone;
+            _heldWorld = sourceView.Root.position;
+            view.Easing = true;
+
+            ApplyLabelAndCount(view);
+            ApplyLabelAndCount(sourceView);
+        }
+
+        private void DropDetached(InventoryZone zone, Vector3 local, bool overCell, int cx, int cy)
+        {
+            var piece = _held;
+            var w = _heldRotated ? piece.Definition.Height : piece.Definition.Width;
+            var h = _heldRotated ? piece.Definition.Width : piece.Definition.Height;
+            zone.AnchorFromPoint(local, w, h, out var ax, out var ay);
+
+            // Free spot: the piece becomes a stack of its own.
+            if (zone.Grid.TryPlaceDetached(piece, ax, ay, _heldRotated))
+            {
+                _heldDetached = false;
+                _splitSource = null;
+                ReleaseHeld(piece);
+                return;
+            }
+
+            // Otherwise pour it into a stack of the same item under the cursor.
+            if (!overCell) return;
+
+            var other = zone.Grid.GetAt(cx, cy);
+            if (other == null || zone.Grid.MergeDetached(piece, other) <= 0) return;
+
+            if (piece.Count <= 0) DiscardHeldPiece();
+            else if (_views.TryGetValue(piece, out var view)) ApplyLabelAndCount(view); // leftovers stay in the hand
+        }
+
+        /// <summary>Cancelled or closed while holding a piece: it pours back into the stack it came from.</summary>
+        private void ReturnHeldPiece()
+        {
+            var piece = _held;
+            var source = _splitSource;
+            var grid = inventory.GridFor(piece.Definition.Category);
+
+            if (source != null && grid.Contains(source)) grid.MergeDetached(piece, source);
+
+            var rest = piece.Count;
+            var def = piece.Definition;
+            DiscardHeldPiece();
+
+            // Should not happen (the source always has room), but never lose items. Grid.Add raises no pickup event.
+            if (rest > 0) grid.Add(def, rest);
+        }
+
+        private void DiscardHeldPiece()
+        {
+            var piece = _held;
+            _held = null;
+            _heldDetached = false;
+            _splitSource = null;
+
+            if (piece != null && _views.TryGetValue(piece, out var view))
+            {
+                Destroy(view.Root.gameObject);
+                _views.Remove(piece);
+            }
+        }
+
         private void Drop(InventoryZone zone, Vector3 local, bool overCell, int cx, int cy)
         {
             var stack = _held;
 
             // The wrong compartment: the ghost is red there, and nothing happens.
             if (zone.Category != stack.Definition.Category) return;
+
+            if (_heldDetached)
+            {
+                DropDetached(zone, local, overCell, cx, cy);
+                return;
+            }
 
             var w = _heldRotated ? stack.Definition.Height : stack.Definition.Width;
             var h = _heldRotated ? stack.Definition.Width : stack.Definition.Height;
@@ -379,6 +477,12 @@ namespace Items
 
         private void ReleaseHeld(ItemStack stack)
         {
+            if (_heldDetached && stack == _held)
+            {
+                ReturnHeldPiece();
+                return;
+            }
+
             _held = null;
 
             if (stack != null && _views.TryGetValue(stack, out var view))
@@ -413,7 +517,7 @@ namespace Items
             List<ItemStack> stale = null;
             foreach (var pair in _views)
             {
-                if (!ContainsStack(pair.Key))
+                if (!ContainsStack(pair.Key) && !(_heldDetached && pair.Key == _held)) // a held piece is on no grid yet
                 {
                     stale ??= new List<ItemStack>();
                     stale.Add(pair.Key);

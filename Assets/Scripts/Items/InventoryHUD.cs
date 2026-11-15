@@ -224,7 +224,7 @@ namespace Items
                 new Vector2(1000f, 80f), new Vector2(0.5f, 0f));
 
             var hint = MakeText(_overlayRoot.transform,
-                "LMB pick up / place     R rotate     RMB use     TAB close", 24, TextAnchor.MiddleCenter);
+                "LMB pick up / place     MMB split     R rotate     RMB use     TAB close", 24, TextAnchor.MiddleCenter);
             hint.color = new Color(1f, 1f, 1f, 0.55f);
             Anchor(hint.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 24f),
                 new Vector2(1400f, 40f), new Vector2(0.5f, 0f));

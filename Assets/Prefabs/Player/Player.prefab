@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4621242746278700368}
   - component: {fileID: 6765237578848114544}
   - component: {fileID: 3888382706030324227}
+  - component: {fileID: 3286582937994961830}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -117,6 +118,24 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 983cbe2675678514fb88ced295f62aea, type: 2}
   - {fileID: 11400000, guid: 61c31fd1c746e47418f6b2c1c7ea1403, type: 2}
   - {fileID: 11400000, guid: 61c31fd1c746e47418f6b2c1c7ea1403, type: 2}
+--- !u!114 &3286582937994961830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766028040625068675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0670f07196005764698efea723bba94c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Items.PickupInteractor
+  cam: {fileID: 8264003597976672933}
+  inventory: {fileID: 3888382706030324227}
+  range: 2.5
+  mask:
+    serializedVersion: 2
+    m_Bits: 2048
 --- !u!1 &1053865699183362461
 GameObject:
   m_ObjectHideFlags: 0
@@ -498,7 +517,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 767
+    m_Bits: 2815
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
