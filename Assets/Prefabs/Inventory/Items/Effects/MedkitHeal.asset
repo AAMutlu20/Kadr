@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 208e17ba0b6ad6a43a6a75ade0792716, type: 3}
   m_Name: MedkitHeal
   m_EditorClassIdentifier: Assembly-CSharp::Items.HealEffect
-  amount: 75
+  amount: 100

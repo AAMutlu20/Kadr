@@ -14,11 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Items.ItemDefinition
   id: flashlight
   displayName: Flashlight
-  description: 
+  description: A highly customisable soviet flashlight, model FBK-1. Works on flat
+    4,5 volt batteries.
   icon: {fileID: 0}
   inventoryModel: {fileID: 0}
-  category: 0
+  category: 1
   width: 1
-  height: 1
+  height: 2
   maxStack: 1
   effect: {fileID: 0}

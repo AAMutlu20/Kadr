@@ -14,11 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Items.ItemDefinition
   id: leninade
   displayName: Leninade
-  description: 
+  description: 'Leninade - 350 mililiters of communism! Feel the taste of Soviet
+    Party! '
   icon: {fileID: 0}
   inventoryModel: {fileID: 0}
   category: 0
   width: 1
-  height: 1
-  maxStack: 1
+  height: 3
+  maxStack: 3
   effect: {fileID: 0}

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fa4e7384246c3f4284dd23eb7fc9e84, type: 3}
+  m_Name: Incendiary Ammo
+  m_EditorClassIdentifier: Assembly-CSharp::Items.ItemDefinition
+  id: incendiary_ammo
+  displayName: Incendiary Ammo
+  description: An experimental combination of powdered napalm and gunpowder make
+    this ammo higly flammable on detonation.
+  icon: {fileID: 0}
+  inventoryModel: {fileID: 0}
+  category: 0
+  width: 1
+  height: 1
+  maxStack: 15
+  effect: {fileID: 0}
