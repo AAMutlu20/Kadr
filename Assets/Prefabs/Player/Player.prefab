@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6765237578848114544}
   - component: {fileID: 3888382706030324227}
   - component: {fileID: 3286582937994961830}
+  - component: {fileID: 656181039967244489}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -35,6 +36,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4483128695049528170}
+  - {fileID: 5203059232605321542}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &2931183697574631838
@@ -136,6 +138,47 @@ MonoBehaviour:
   mask:
     serializedVersion: 2
     m_Bits: 581
+--- !u!114 &656181039967244489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766028040625068675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77ac1acb90ca3244db90c7529fd90a1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Photography.CameraController
+  cam: {fileID: 8264003597976672933}
+  weapons: {fileID: 4770281729495282594}
+  player: {fileID: 4621242746278700368}
+  health: {fileID: 6765237578848114544}
+  inventory: {fileID: 3888382706030324227}
+  frameFraction: 0.6
+  photoSize: 384
+  sightBlockers:
+    serializedVersion: 2
+    m_Bits: 1536
+  photoCullingMask:
+    serializedVersion: 2
+    m_Bits: 735
+  stats:
+    raiseTime: 0.35
+    windupTime: 0.6
+    recoverTime: 0.8
+    raisedSpeed: 0.6
+    windupSpeed: 0.35
+    vulnerability: 1.5
+    zoom: 12
+  scoring:
+    baseValue: 50
+    maxDistance: 30
+    minVisibleFraction: 0.5
+    idealFill: 0.6
+    attackBonus: 1.5
+    groupBonusPerExtra: 0.1
+    groupBonusMax: 0.3
 --- !u!1 &1053865699183362461
 GameObject:
   m_ObjectHideFlags: 0
@@ -582,6 +625,52 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &8286695195523168974
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5203059232605321542}
+  - component: {fileID: 840107517388560547}
+  m_Layer: 3
+  m_Name: HUD
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5203059232605321542
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8286695195523168974}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6826612374634376610}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &840107517388560547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8286695195523168974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c73713c1ab5d91845bce68f08ad8a48d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Photography.PhotoViewfinderView
+  popupSeconds: 3
+  currencySuffix: " \u0440\u0443\u0431."
 --- !u!1001 &1830178146829379066
 PrefabInstance:
   m_ObjectHideFlags: 0

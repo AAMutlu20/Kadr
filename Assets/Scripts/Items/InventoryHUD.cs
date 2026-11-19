@@ -31,6 +31,8 @@ namespace Items
         [Header("References")]
         [SerializeField] private Inventory inventory;
         [SerializeField] private SuitcaseRig rig;
+        [Tooltip("The player's Health. Empty = searched for on the Inventory's object, its parents and children, then on the PlayerController.")]
+        [SerializeField] private Health playerHealth;
 
         [Header("Panels on the lid (children of the lid mesh)")]
         [Tooltip("Where the health bar and XP go. Empty = top left of the screen.")]
@@ -86,19 +88,14 @@ namespace Items
         {
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
-            // Health published its first event in its own Start, possibly before this existed. Read it once.
-            if (inventory && inventory.TryGetComponent<Health>(out var health))
-            {
-                _hpCurrent = health.Current;
-                _hpMax = health.Max;
-                _hpShown = _hpMax > 0f ? _hpCurrent / _hpMax : 0f;
-            }
+            FindHealth();
+            ReadHealth();
+            _hpShown = _hpMax > 0f ? _hpCurrent / _hpMax : 0f;
 
             Build();
 
             if (GameServices.TryGet(out _bus))
             {
-                _bus.Subscribe<HealthChangedEvent>(OnHealthChanged);
                 _bus.Subscribe<XpChangedEvent>(OnXpChanged);
             }
 
@@ -109,7 +106,6 @@ namespace Items
         {
             if (_bus != null)
             {
-                _bus.Unsubscribe<HealthChangedEvent>(OnHealthChanged);
                 _bus.Unsubscribe<XpChangedEvent>(OnXpChanged);
             }
 
@@ -126,6 +122,7 @@ namespace Items
                 if (panel) panel.SetActive(visible);
             }
 
+            if (visible) ReadHealth();
             if (visible) _hpShown = _hpMax > 0f ? _hpCurrent / _hpMax : 0f; // no drain animation from a stale value
         }
 
@@ -144,13 +141,33 @@ namespace Items
             if (_ordersBodyText) _ordersBodyText.text = body;
         }
 
-        private void OnHealthChanged(HealthChangedEvent e)
+        /// <summary>
+        /// Health is read straight from the player's Health component instead of from events. Events were filtered by
+        /// "is this the Inventory's own GameObject", which silently shows 0 whenever Health sits on another object.
+        /// </summary>
+        private void FindHealth()
         {
-            // Every entity publishes this event, so only the player's own matters here.
-            if (!inventory || e.Entity != inventory.gameObject) return;
+            if (!playerHealth && inventory)
+            {
+                playerHealth = inventory.GetComponentInParent<Health>();
+                if (!playerHealth) playerHealth = inventory.GetComponentInChildren<Health>();
+            }
 
-            _hpCurrent = e.Current;
-            _hpMax = e.Max;
+            if (!playerHealth)
+            {
+                var player = FindAnyObjectByType<PlayerController>();
+                if (player) playerHealth = player.GetComponentInChildren<Health>();
+            }
+
+            if (!playerHealth) Debug.LogWarning("[InventoryHud] No player Health found. Assign it in the inspector.", this);
+        }
+
+        private void ReadHealth()
+        {
+            if (!playerHealth) return;
+
+            _hpCurrent = playerHealth.Current;
+            _hpMax = playerHealth.Max;
         }
 
         private void OnXpChanged(XpChangedEvent e)
@@ -162,6 +179,7 @@ namespace Items
         {
             if (!_visible || !_hpFill) return;
 
+            ReadHealth();
             var target = _hpMax > 0f ? Mathf.Clamp01(_hpCurrent / _hpMax) : 0f;
             _hpShown = Mathf.MoveTowards(_hpShown, target, Time.unscaledDeltaTime * 0.6f);
 

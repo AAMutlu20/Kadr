@@ -2243,6 +2243,7 @@ GameObject:
   - component: {fileID: 4458450716435228}
   - component: {fileID: 995047724889024176}
   - component: {fileID: 2320884950836846454}
+  - component: {fileID: 8962685300305522218}
   m_Layer: 6
   m_Name: Zombie
   m_TagString: Untagged
@@ -2356,6 +2357,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.HitEffect
   effectPrefab: {fileID: 5253329068730845926, guid: 7212169744c452e44a4fac124305ace8, type: 3}
   lifetime: 0.5
+--- !u!114 &8962685300305522218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7012699890109632342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49d4add90225c0547bbd62eee38458a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Photography.Photographable
+  subjectId: zombie
+  displayName: Zombie
+  rarity: 1
+  danger: 1
+  anchors:
+  - {fileID: 4392898528303123096}
 --- !u!1 &7311771117472097349
 GameObject:
   m_ObjectHideFlags: 0

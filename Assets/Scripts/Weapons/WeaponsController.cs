@@ -52,6 +52,12 @@ namespace Weapons
         [Tooltip("Seconds to go from hip to fully aimed (and back).")]
         [SerializeField] private float aimTransitionTime = 0.15f;
 
+        [Header("Reloading and racking")]
+        [Tooltip("Walking speed while reloading or racking, as a fraction of normal (0.2 = 20%). You cannot sprint then.")]
+        [SerializeField] private float busyMoveMultiplier = 0.2f;
+        [Tooltip("Seconds the player stays slowed after firing a weapon that racks (the shotgun). Match the rack animation.")]
+        [SerializeField] private float rackSlowTime = 1.2f;
+
         [Header("Switching")]
         [SerializeField] private float maxLowerWait = 3f; // for safety, incase the lowering never reports finished
 
@@ -64,6 +70,7 @@ namespace Weapons
         private float _depletedTime;
         private float _baseFov;
         private float _aimBlend; // 0 = hip, 1 = fully aimed
+        private float _rackUntil; // Time.time until which a rack keeps the player slowed
 
         public IWeaponStrategy Current => _weapons[_current];
         public bool IsSwitching => _switching;
@@ -161,7 +168,14 @@ namespace Weapons
 
             if (Current.View.IsLowered) return;
 
-            if (mouse.leftButton.wasPressedThisFrame) Current.PrimaryFire();
+            if (mouse.leftButton.wasPressedThisFrame)
+            {
+                var ammoBefore = Current.Ammo;
+                Current.PrimaryFire();
+
+                // Weapons other than the default one rack after a shot. Only a shot that was really fired counts.
+                if (_current != DefaultSlot && Current.Ammo < ammoBefore) _rackUntil = Time.time + rackSlowTime;
+            }
             if (kb.rKey.wasPressedThisFrame) Current.Reload();
         }
 
@@ -187,8 +201,10 @@ namespace Weapons
 
             if (player)
             {
-                player.CanSprint = !Current.IsAiming;
-                player.WeaponSpeedMultiplier = Current.IsAiming ? aimMoveMultiplier : 1f;
+                // Reloading and racking: no sprinting and a heavy slow-down. Aiming has its own slow-down.
+                var busy = Current.IsBusy || Time.time < _rackUntil;
+                player.CanSprint = !Current.IsAiming && !busy;
+                player.WeaponSpeedMultiplier = busy ? busyMoveMultiplier : Current.IsAiming ? aimMoveMultiplier : 1f;
             }
 
             var target = Current.IsAiming ? 1f : 0f;
@@ -228,6 +244,7 @@ namespace Weapons
         private IEnumerator SwitchRoutine(int slot)
         {
             _switching = true;
+            _rackUntil = 0f; // a rack in progress is cut off by the switch
 
             var from = Current;
             var to = _weapons[slot];

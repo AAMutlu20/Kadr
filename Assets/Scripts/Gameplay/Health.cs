@@ -28,6 +28,7 @@ namespace Gameplay
         public float Current => _current;
         public float Max => maxHealth;
         public bool IsDead { get; private set; }
+        public float DamageTakenMultiplier { get; set; } = 1f;
 
         /// <summary>Raised once, after the final HealthChangedEvent, when health reaches zero.</summary>
         public event Action Died;
@@ -48,6 +49,7 @@ namespace Gameplay
             {
                 return;
             }
+            amount *= DamageTakenMultiplier;
 
             SetCurrent(_current - amount);
 

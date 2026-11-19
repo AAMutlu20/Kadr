@@ -10,7 +10,7 @@ namespace Items
     ///
     /// Controls while open:
     ///   Left click   pick up the item under the cursor (it follows the mouse), click again to put it down.
-    ///                Dropping onto a stack of the same item merges them. On the album it opens the upgrades.
+    ///                Dropping onto a stack of the same item merges them. On the album it opens the upgrades, on the photos the album window.
     ///   R            rotate the held item (the ghost is green when it fits, red when it does not)
     ///   Right click  use the item under the cursor, or put back the item you are holding
     ///   Esc / Tab    close
@@ -91,6 +91,11 @@ namespace Items
         private Material _ghostMaterial;
 
         private InventoryHotspot _hotspot;
+
+        /// <summary>
+        /// While true (the photo album window is open) the suitcase ignores the mouse and Esc. Tab still closes it.
+        /// </summary>
+        public bool Blocked { get; set; }
 
         private bool _open;
         private float _readyAt;
@@ -187,6 +192,13 @@ namespace Items
             AnimateViews();
 
             if (!_open) return;
+
+            if (Blocked)
+            {
+                if (_hotspot) _hotspot.SetHover(false);
+                _hotspot = null;
+                return;
+            }
 
             if (kb.escapeKey.wasPressedThisFrame)
             {
@@ -319,6 +331,7 @@ namespace Items
 
             if (_hotspot) _hotspot.SetHover(false);
             _hotspot = null;
+            Blocked = false;
 
             rig.SetOpen(false, closeDelay);
             if (hud) hud.SetVisible(false);
