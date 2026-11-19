@@ -7,17 +7,18 @@ using UnityEngine;
 namespace Photography
 {
     /// <summary>
-    /// The player's XP. XP is only spent on camera upgrades, in the suitcase. Put this on the Player (anything that
-    /// is always in the scene works).
+    /// The player's XP and camera points. Put this on the Player (anything always in the scene works).
     ///
-    /// Earned by:
+    /// XP fills a bar. When the bar is full it gives ONE point and starts again, with a bigger target: the Point Costs
+    /// list is the XP the 1st, 2nd, 3rd... point needs. Past the end of the list, every further point costs the last
+    /// number. Points are spent on camera upgrades in the suitcase (CameraProgress).
+    ///
+    /// XP comes from:
     ///  - kills: a number per enemy type (EnemyKilledEvent), so enemies killed by fire or by each other count too
     ///  - discovery: the first good photo of each enemy type, once per type, ever
     ///
-    /// The total and the discovery list are static, so they survive a restart of the run within one session.
-    /// Saving to disk comes later with everything else. Publishes XpChangedEvent, which the inventory screen shows.
-    ///
-    /// If you already have a class that awards XP for kills, do not use both: remove its award, or this component's kill part.
+    /// Everything is static, so it survives a restart of the run within one session. Saving to disk comes later.
+    /// If you already have a class that awards XP for kills, do not use both.
     /// </summary>
     public class PlayerXp : MonoBehaviour
     {
@@ -27,6 +28,10 @@ namespace Photography
             public string enemyId;
             public int xp;
         }
+
+        [Header("Points")]
+        [Tooltip("XP needed for the 1st, 2nd, 3rd... point. After the last one every point costs the same as the last.")]
+        [SerializeField] private int[] pointCosts = { 100, 200, 400, 700, 1000, 1100, 1200, 1500, 2000 };
 
         [Header("Kills")]
         [SerializeField] private int defaultKillXp = 10;
@@ -39,41 +44,71 @@ namespace Photography
         [Tooltip("How much of the enemy must be in the photo for it to count as discovered.")]
         [SerializeField, Range(0f, 1f)] private float discoveryCoverage = 0.5f;
 
-        private static int _total;
+        private static readonly int[] DefaultCosts = { 100, 200, 400, 700, 1000, 1100, 1200, 1500, 2000 };
+        private static int[] _costs = DefaultCosts;
+        private static int _points;
+        private static int _progress;
+        private static int _pointsEarned;
         private static readonly HashSet<string> Discovered = new();
 
         private EventBus _bus;
 
-        public static int Total => _total;
+        public static int Points => _points;
+        public static int Progress => _progress;
+        public static int Needed => _costs[Mathf.Min(_pointsEarned, _costs.Length - 1)];
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
-            _total = 0;
+            _costs = DefaultCosts;
+            _points = _progress = _pointsEarned = 0;
             Discovered.Clear();
         }
 
-        public static void Add(int amount)
+        public static void Add(int xp)
         {
-            if (amount <= 0) return;
+            if (xp <= 0) return;
 
-            _total += amount;
-            Publish(amount);
+            _progress += xp;
+            var earned = false;
+
+            while (_progress >= Needed)
+            {
+                _progress -= Needed;
+                _pointsEarned++;
+                _points++;
+                earned = true;
+            }
+
+            Publish(xp, earned);
+
+            if (earned && GameServices.TryGet(out EventBus bus))
+            {
+                bus.Publish(new NoticeEvent($"Camera point earned  ({_points} to spend)"));
+            }
         }
 
-        /// <summary>Takes the XP if the player has it. False (and nothing taken) if not.</summary>
-        public static bool TrySpend(int amount)
+        /// <summary>Spends camera points. False (and nothing taken) if there are not enough.</summary>
+        public static bool TrySpend(int points)
         {
-            if (amount < 0 || _total < amount) return false;
+            if (points < 0 || _points < points) return false;
 
-            _total -= amount;
-            Publish(-amount);
+            _points -= points;
+            Publish(0, false);
             return true;
         }
 
-        private static void Publish(int delta)
+        private static void Publish(int delta, bool pointEarned)
         {
-            if (GameServices.TryGet(out EventBus bus)) bus.Publish(new XpChangedEvent(_total, delta));
+            if (GameServices.TryGet(out EventBus bus))
+            {
+                bus.Publish(new XpChangedEvent(_points, _progress, Needed, delta, pointEarned));
+            }
+        }
+
+        private void Awake()
+        {
+            if (pointCosts != null && pointCosts.Length > 0) _costs = pointCosts;
         }
 
         private void OnEnable()
@@ -95,7 +130,7 @@ namespace Photography
 
         private void Start()
         {
-            Publish(0); // so the inventory screen shows the real total straight away
+            Publish(0, false); // so the suitcase shows the real bar straight away
         }
 
         private void OnKilled(EnemyKilledEvent e)

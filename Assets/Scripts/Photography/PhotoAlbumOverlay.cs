@@ -29,6 +29,8 @@ namespace Photography
         private const float CellW = 160f;
         private const float CellH = 195f;
         private const float Gap = 10f;
+        private const float DetailWindow = 285f;
+        private const float ScrollStep = 45f;
 
         [Header("References")]
         [SerializeField] private CameraController photoCamera;
@@ -70,6 +72,9 @@ namespace Photography
         private Text _payoutText;
         private RawImage _bigPicture;
         private Text _detailText;
+        private RectTransform _detailRect;   // the text, taller than its window when a photo has many subjects
+        private float _scroll;
+        private float _scrollMax;
         private PanelButton _pin;
         private PanelButton _discard;
 
@@ -168,6 +173,14 @@ namespace Photography
             }
 
             var pointer = mouse.position.ReadValue();
+
+            // Mouse wheel scrolls the details of the shown photo.
+            var wheel = mouse.scroll.ReadValue().y;
+            if (wheel != 0f && _scrollMax > 0f)
+            {
+                _scroll = Mathf.Clamp(_scroll - Mathf.Sign(wheel) * ScrollStep, 0f, _scrollMax);
+                _detailRect.anchoredPosition = new Vector2(0f, _scroll);
+            }
 
             // Which photo is under the mouse?
             Slot over = null;
@@ -322,7 +335,7 @@ namespace Photography
             if (photo == null)
             {
                 _bigPicture.gameObject.SetActive(false);
-                _detailText.text = "<color=#999999>Click a photo to look at it.\nPinned photos always count towards the paid 12.</color>";
+                SetDetailText("<color=#999999>Click a photo to look at it.\nPinned photos always count towards the paid 12.</color>");
                 return;
             }
 
@@ -348,7 +361,19 @@ namespace Photography
                 : _album.GetPaid().Contains(photo) ? "<color=#80d090>In the paid 12</color>"
                 : "<color=#e07070>Not paid</color>");
 
-            _detailText.text = text.ToString();
+            SetDetailText(text.ToString());
+        }
+
+        /// <summary>Sets the text, makes its box as tall as the text needs, and scrolls back to the top.</summary>
+        private void SetDetailText(string content)
+        {
+            _detailText.text = content;
+
+            var height = Mathf.Max(DetailWindow, _detailText.preferredHeight + 8f);
+            _detailRect.sizeDelta = new Vector2(310f, height);
+            _scrollMax = height - DetailWindow;
+            _scroll = 0f;
+            _detailRect.anchoredPosition = Vector2.zero;
         }
 
         // ---------- building the window ----------
@@ -398,8 +423,13 @@ namespace Photography
             SetTopLeft(detail.rectTransform, 1440f, 92f, 330f, 700f);
 
             _bigPicture = MakeRaw(detail.transform, "BigPicture", 10f, 10f, 310f, 310f);
-            _detailText = MakeText(detail.transform, "DetailText", "", 26, TextAnchor.UpperLeft, Color.white, 10f, 330f, 310f, 280f);
+            // The text sits in a window that clips it. The mouse wheel scrolls it, there is no visible bar.
+            var scrollGo = new GameObject("DetailScroll", typeof(RectTransform), typeof(RectMask2D));
+            scrollGo.transform.SetParent(detail.transform, false);
+            SetTopLeft(scrollGo.GetComponent<RectTransform>(), 10f, 330f, 310f, DetailWindow);
+            _detailText = MakeText(scrollGo.transform, "DetailText", "", 26, TextAnchor.UpperLeft, Color.white, 0f, 0f, 310f, DetailWindow);
             _detailText.supportRichText = true;
+            _detailRect = _detailText.rectTransform;
 
             _pin = MakeButton(detail.transform, "Pin", 10f, 630f, 150f, 52f);
             _discard = MakeButton(detail.transform, "Discard", 170f, 630f, 150f, 52f);

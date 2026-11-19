@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53c32dc58f923c84ebb65639f9a26ad9, type: 3}
   m_Name: CameraUpgradeTree
   m_EditorClassIdentifier: Assembly-CSharp::Photography.CameraUpgradeTree
-  xpUnit: 100
   branches:
   - branch: 1
     title: REPORTER
@@ -22,7 +21,7 @@ MonoBehaviour:
     - title: Quick shutter
       description: Shorten your windup and take less extra damage while in camera
         mode.
-      costUnits: 1
+      costPoints: 1
       sets:
       - stat: 1
         value: 0.45
@@ -30,7 +29,7 @@ MonoBehaviour:
         value: 1.25
     - title: Fast flash
       description: Abilities recharge twice as fast. Camera equips quicker.
-      costUnits: 2
+      costPoints: 1
       sets:
       - stat: 14
         value: 0.5
@@ -38,7 +37,7 @@ MonoBehaviour:
         value: 0.25
     - title: Steady hands
       description: Move during windup. Recovery is halved.
-      costUnits: 4
+      costPoints: 1
       sets:
       - stat: 4
         value: 0.5
@@ -46,7 +45,7 @@ MonoBehaviour:
         value: 0.4
     - title: Instant
       description: Remove camera windup and take no extra damage when in camera mode.
-      costUnits: 7
+      costPoints: 2
       sets:
       - stat: 1
         value: 0
@@ -59,7 +58,7 @@ MonoBehaviour:
     tiers:
     - title: Telephoto
       description: Increase camera zoom and subject detection range.
-      costUnits: 1
+      costPoints: 1
       sets:
       - stat: 6
         value: 20
@@ -67,7 +66,7 @@ MonoBehaviour:
         value: 45
     - title: Studio eye
       description: Repeat photos lose less value.
-      costUnits: 2
+      costPoints: 1
       sets:
       - stat: 11
         value: 0.6
@@ -78,7 +77,7 @@ MonoBehaviour:
     - title: Long exposure
       description: 'Camera windup time increases. Deal more damage to photographed
         enemies and get more money from the group bonus.  '
-      costUnits: 4
+      costPoints: 1
       sets:
       - stat: 8
         value: 2
@@ -89,7 +88,7 @@ MonoBehaviour:
     - title: Masterpiece
       description: A perfectly framed, fully visible subject is worth way more than
         normal.
-      costUnits: 7
+      costPoints: 2
       sets:
       - stat: 10
         value: 1.5
@@ -103,15 +102,15 @@ MonoBehaviour:
     - description: Stun 0.5 s
       duration: 0.5
       cooldown: 6
-      costUnits: 1
+      costPoints: 1
     - description: Stun 1 s
       duration: 1
       cooldown: 6
-      costUnits: 2
+      costPoints: 2
     - description: Stun 1.5 s
       duration: 1.5
       cooldown: 6
-      costUnits: 4
+      costPoints: 3
   - ability: 2
     title: DISORIENT
     description: Enemies in the photo turn on each other. Bosses are immune.
@@ -120,15 +119,15 @@ MonoBehaviour:
     - description: Fight each other for 1.5 s
       duration: 1.5
       cooldown: 15
-      costUnits: 1
+      costPoints: 1
     - description: Fight each other for 4 s
       duration: 4
       cooldown: 15
-      costUnits: 2
+      costPoints: 2
     - description: Fight each other until one dies
       duration: 0
       cooldown: 30
-      costUnits: 4
+      costPoints: 3
   - ability: 3
     title: FIRESHOW
     description: Enemies in the photo catch fire and burn over time.
@@ -137,15 +136,15 @@ MonoBehaviour:
     - description: Burns for 3 s
       duration: 3
       cooldown: 12
-      costUnits: 1
+      costPoints: 1
     - description: Burns for 4 s
       duration: 4
       cooldown: 12
-      costUnits: 2
+      costPoints: 2
     - description: Burns for 5 s
       duration: 5
       cooldown: 12
-      costUnits: 4
+      costPoints: 3
   - ability: 4
     title: REVEAL
     description: After a photo the lens switches to night vision for a time. Lowering
@@ -155,12 +154,12 @@ MonoBehaviour:
     - description: Night vision for 5 s
       duration: 5
       cooldown: 25
-      costUnits: 1
+      costPoints: 1
     - description: Night vision for 10 s
       duration: 10
       cooldown: 25
-      costUnits: 2
+      costPoints: 2
     - description: Night vision for 15 s
       duration: 15
       cooldown: 25
-      costUnits: 4
+      costPoints: 3

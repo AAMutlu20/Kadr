@@ -37,7 +37,7 @@ namespace Photography
 
         // ---------- buying ----------
 
-        /// <summary>XP price of the next tier of this branch. -1 if there is none, or the branch is locked out.</summary>
+        /// <summary>Point price of the next tier of this branch. -1 if there is none, or the branch is locked out.</summary>
         public int NextBranchTierCost(CameraUpgradeTree tree, CameraBranch branch)
         {
             if (IsBranchLocked(branch)) return -1;
@@ -46,7 +46,7 @@ namespace Photography
             var next = (Branch == branch ? BranchTier : 0) + 1;
             if (data == null || next > data.tiers.Count) return -1;
 
-            return data.tiers[next - 1].costUnits * tree.xpUnit;
+            return data.tiers[next - 1].costPoints;
         }
 
         public bool TryBuyBranchTier(CameraUpgradeTree tree, CameraBranch branch)
@@ -60,12 +60,12 @@ namespace Photography
             return true;
         }
 
-        /// <summary>XP price of the next level of an ability. -1 if it is at its top level.</summary>
+        /// <summary>Point price of the next level of an ability. -1 if it is at its top level.</summary>
         public int NextAbilityLevelCost(CameraUpgradeTree tree, CameraAbility ability)
         {
             var next = _levels[(int)ability] + 1;
             var level = tree.Level(ability, next);
-            return level == null ? -1 : level.costUnits * tree.xpUnit;
+            return level == null ? -1 : level.costPoints;
         }
 
         public bool TryBuyAbilityLevel(CameraUpgradeTree tree, CameraAbility ability)

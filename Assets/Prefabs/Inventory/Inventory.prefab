@@ -973,6 +973,7 @@ MonoBehaviour:
   inventoryView: {fileID: 0}
   bookHotspot: {fileID: 8540891682388370867}
   upgradeTree: {fileID: 11400000, guid: 8d10ea52b0573844eb4b8ba790c062c4, type: 2}
+  lockIcon: {fileID: 1822879496, guid: 132358e9bf26b60458b731bf001e31db, type: 3}
 --- !u!1 &2132966110057118963
 GameObject:
   m_ObjectHideFlags: 0

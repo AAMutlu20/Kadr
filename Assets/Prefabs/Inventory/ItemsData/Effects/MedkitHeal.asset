@@ -10,6 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 208e17ba0b6ad6a43a6a75ade0792716, type: 3}
-  m_Name: WipeHeal
+  m_Name: MedkitHeal
   m_EditorClassIdentifier: Assembly-CSharp::Items.HealEffect
-  amount: 5
+  amount: 50
+  overTimeAmount: 25
+  overTimeSeconds: 10

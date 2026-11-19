@@ -103,6 +103,7 @@ namespace Enemies
             _health = GetComponent<Health>();
 
             if (!animator) animator = GetComponentInChildren<Animator>();
+            if (!GetComponent<EnemyHurtVisual>()) gameObject.AddComponent<EnemyHurtVisual>();
 
             // Held back until a NavMesh exists under us, see the class comment.
             Agent.enabled = false;

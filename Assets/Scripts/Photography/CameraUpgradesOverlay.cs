@@ -33,6 +33,8 @@ namespace Photography
             public RectTransform Rect;
             public Image Frame;
             public Text Title, Body, Level, Cost;
+            public Image Lock;        // shown instead of the description while the upgrade is hidden
+            public Text LockText;     // fallback when there is no icon texture
             public RectTransform EquipRect;
             public Image EquipBg;
             public Text EquipText;
@@ -48,6 +50,12 @@ namespace Photography
         [SerializeField] private InventoryHotspot bookHotspot;
         [Tooltip("The upgrade tree asset. Empty = the one the camera uses, or a default made in memory.")]
         [SerializeField] private CameraUpgradeTree upgradeTree;
+
+        [Header("Look")]
+        [Tooltip("The lock picture (a Sprite, Texture Type: Sprite 2D and UI). Shown instead of the description on upgrades you cannot see yet. Empty = the word LOCKED.")]
+        [SerializeField] private Sprite lockIcon;
+        [Tooltip("The lock shown when you can afford the upgrade and it is the next one: a different sprite, drawn yellow. Empty = the normal lock, tinted yellow.")]
+        [SerializeField] private Sprite affordableIcon;
 
         private readonly List<Card> _cards = new();
         private CameraUpgradeTree _tree;
@@ -65,6 +73,7 @@ namespace Photography
         private float _messageUntil;
 
         private static readonly Color Dim = new(0.16f, 0.16f, 0.17f);
+        private static readonly Color VeryDim = new(0.09f, 0.09f, 0.1f);
         private static readonly Color Owned = new(0.17f, 0.34f, 0.2f);
         private static readonly Color Next = new(0.27f, 0.27f, 0.31f);
         private static readonly Color Armed = new(0.55f, 0.4f, 0.1f);
@@ -213,7 +222,7 @@ namespace Photography
             if (card.Tier != owned + 1) { Say("Buy the earlier tiers first"); return; }
 
             var cost = _progress.NextBranchTierCost(_tree, card.Branch);
-            if (PlayerXp.Total < cost) { Say($"Not enough XP: {cost - PlayerXp.Total} more needed"); return; }
+            if (PlayerXp.Points < cost) { Say(NeedMore(cost)); return; }
 
             // The first purchase picks the branch for good: ask once.
             if (_progress.Branch == CameraBranch.None && _armed != card)
@@ -231,10 +240,18 @@ namespace Photography
         {
             var cost = _progress.NextAbilityLevelCost(_tree, card.Ability);
             if (cost < 0) { Say("Already at the top level"); return; }
-            if (PlayerXp.Total < cost) { Say($"Not enough XP: {cost - PlayerXp.Total} more needed"); return; }
+            if (PlayerXp.Points < cost) { Say(NeedMore(cost)); return; }
 
             if (_progress.TryBuyAbilityLevel(_tree, card.Ability)) Say("Upgraded");
         }
+
+        private static string NeedMore(int cost)
+        {
+            var missing = cost - PlayerXp.Points;
+            return $"Not enough points: {missing} more {(missing == 1 ? "point" : "points")} needed";
+        }
+
+        private static string Points(int n) => n == 1 ? "1 point" : n + " points";
 
         private void Say(string text)
         {
@@ -247,7 +264,7 @@ namespace Photography
         private void Refresh()
         {
             _dirty = false;
-            _xpText.text = $"XP  <b>{PlayerXp.Total}</b>";
+            _xpText.text = $"POINTS  <b>{PlayerXp.Points}</b>";
 
             foreach (var card in _cards)
             {
@@ -259,44 +276,69 @@ namespace Photography
             if (_hovered != null) _hovered.Frame.color = Color.Lerp(_hovered.Frame.color, Color.white, 0.12f);
         }
 
+        /// <summary>
+        /// How much a branch card shows depends on how far it is from the next thing you can buy:
+        ///   owned or next to buy:  everything (the next one also has a small lock, yellow when you can afford it)
+        ///   one further:           the name and a lock
+        ///   two or more further, or in the branch you did not pick:  dark, a big lock, nothing else
+        /// </summary>
         private void RefreshBranchCard(Card card)
         {
             var data = _tree.Branch(card.Branch);
             var tier = data.tiers[card.Tier - 1];
 
-            card.Title.text = $"{card.Tier}.  {tier.title}";
-            card.Body.text = tier.description;
-
             var lockedOut = _progress.IsBranchLocked(card.Branch);
-            var owned = _progress.Branch == card.Branch && _progress.BranchTier >= card.Tier;
-            var next = !lockedOut && (_progress.Branch == card.Branch ? _progress.BranchTier : 0) + 1 == card.Tier;
-            var cost = tier.costUnits * _tree.xpUnit;
+            var ownedCount = _progress.Branch == card.Branch ? _progress.BranchTier : 0;
+            var owned = !lockedOut && ownedCount >= card.Tier;
+            var distance = card.Tier - (ownedCount + 1); // 0 = the one you can buy now
+            var cost = tier.costPoints;
+
+            var showAll = owned || (!lockedOut && distance == 0);
+            var showName = showAll || (!lockedOut && distance == 1);
+            var affordable = !lockedOut && distance == 0 && PlayerXp.Points >= cost;
+            var showLock = !owned;
+
+            card.Title.gameObject.SetActive(showName);
+            card.Title.text = $"{card.Tier}.  {tier.title}";
+            card.Body.gameObject.SetActive(showAll);
+            card.Body.text = tier.description;
+            card.Cost.gameObject.SetActive(showAll);
+
+            // The lock: small in the corner of the card you can buy, big in the middle of the ones that are hidden.
+            var big = !showAll;
+            var size = !big ? 44f : showName ? 64f : 96f;
+            var rect = card.Lock.rectTransform;
+            if (!big) SetTopLeft(rect, CardW - size - 14f, 8f, size, size);
+            else SetTopLeft(rect, (CardW - size) * 0.5f, showName ? 62f : 36f, size, size);
+
+            card.Lock.sprite = affordable && affordableIcon ? affordableIcon : lockIcon;
+            card.Lock.color = affordable ? new Color(1f, 0.85f, 0.25f, 1f)
+                : showName ? new Color(1f, 1f, 1f, 0.55f) : new Color(1f, 1f, 1f, 0.3f);
+            card.Lock.gameObject.SetActive(showLock && lockIcon);
+            card.LockText.gameObject.SetActive(showLock && big && !lockIcon);
 
             if (owned)
             {
                 card.Frame.color = Owned;
                 card.Cost.text = "<color=#80e090>OWNED</color>";
             }
-            else if (lockedOut)
+            else if (!showName)
+            {
+                card.Frame.color = VeryDim;
+            }
+            else if (!showAll)
             {
                 card.Frame.color = Dim;
-                card.Cost.text = "<color=#777777>LOCKED OUT</color>";
             }
             else if (_armed == card)
             {
                 card.Frame.color = Armed;
                 card.Cost.text = "<color=#ffd060>Click again to commit. The other branch is locked for good.</color>";
             }
-            else if (next)
-            {
-                card.Frame.color = Next;
-                var enough = PlayerXp.Total >= cost;
-                card.Cost.text = enough ? $"<b>{cost} XP</b>" : $"<color=#e07070>{cost} XP</color>";
-            }
             else
             {
-                card.Frame.color = Dim;
-                card.Cost.text = $"<color=#777777>{cost} XP</color>";
+                card.Frame.color = Next;
+                card.Cost.text = affordable ? $"<b>{Points(cost)}</b>" : $"<color=#e07070>{Points(cost)}</color>";
             }
         }
 
@@ -323,9 +365,9 @@ namespace Photography
             }
             else
             {
-                var enough = PlayerXp.Total >= cost;
+                var enough = PlayerXp.Points >= cost;
                 var verb = level == 0 ? "Unlock" : "Upgrade";
-                card.Cost.text = enough ? $"{verb}:  <b>{cost} XP</b>" : $"{verb}:  <color=#e07070>{cost} XP</color>";
+                card.Cost.text = enough ? $"{verb}:  <b>{Points(cost)}</b>" : $"{verb}:  <color=#e07070>{Points(cost)}</color>";
             }
 
             var equipped = _progress.Equipped == card.Ability;
@@ -414,6 +456,18 @@ namespace Photography
             card.Title = MakeText(card.Frame.transform, "", 29, TextAnchor.MiddleLeft, Color.white, 20f, 8f, CardW - 32f, 36f);
             card.Body = MakeText(card.Frame.transform, "", 21, TextAnchor.UpperLeft, new Color(0.85f, 0.85f, 0.85f), 20f, 48f, CardW - 32f, 80f, true, 14);
             card.Cost = MakeText(card.Frame.transform, "", 24, TextAnchor.MiddleLeft, Color.white, 20f, 132f, CardW - 32f, 32f);
+
+            // A lock in the middle of the body, while the upgrade is hidden.
+            var lockGo = new GameObject("Lock", typeof(RectTransform), typeof(Image));
+            lockGo.transform.SetParent(card.Frame.transform, false);
+            SetTopLeft(lockGo.GetComponent<RectTransform>(), (CardW - 64f) * 0.5f, 62f, 64f, 64f);
+            card.Lock = lockGo.GetComponent<Image>();
+            card.Lock.sprite = lockIcon;
+            card.Lock.preserveAspect = true;
+            card.Lock.color = new Color(1f, 1f, 1f, 0.55f);
+            card.Lock.raycastTarget = false;
+
+            card.LockText = MakeText(card.Frame.transform, "LOCKED", 26, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.35f), 20f, 62f, CardW - 32f, 64f);
             return card;
         }
 

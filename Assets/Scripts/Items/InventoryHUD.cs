@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Core;
 using Events;
 using Gameplay;
+using Photography;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -60,7 +61,9 @@ namespace Items
         private static readonly Color HpFine = new(0.25f, 0.95f, 0.4f);
         private static readonly Color HpCaution = new(0.95f, 0.8f, 0.2f);
         private static readonly Color HpDanger = new(0.95f, 0.2f, 0.15f);
+        private static readonly Color XpGold = new(0.95f, 0.72f, 0.2f);
         private const float BarHeight = 44f;
+        private const float XpBarHeight = 26f;
         private const float BarBorder = 3f;
 
         private readonly List<GameObject> _worldPanels = new();
@@ -70,7 +73,20 @@ namespace Items
         private RawImage _hpFill;
         private Text _hpText;
         private Texture2D _hpTexture;
-        private Text _xpText;
+        private Text _xpText;     // "POINTS 2"
+        private Text _xpBarText;  // "120 / 400"
+        private RectTransform _xpMask;
+        private RectTransform _xpEdge;
+        private Image _xpEdgeImage;
+        private RawImage _xpFill;
+        private Texture2D _xpTexture;
+        private int _xpProgress;
+        private int _xpNeeded = 100;
+        private int _xpPoints;
+        private float _xpShown;        // 0..1, what the bar shows
+        private bool _xpFilling;       // a point was earned: fill to the top first, flash, then restart
+        private float _xpFlash;
+        private float _xpScroll;
         private Text _ordersTitleText;
         private Text _ordersBodyText;
         private Text _nameText;
@@ -87,6 +103,11 @@ namespace Items
         private void Start()
         {
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+            _xpProgress = PlayerXp.Progress;
+            _xpNeeded = Mathf.Max(1, PlayerXp.Needed);
+            _xpPoints = PlayerXp.Points;
+            _xpShown = Mathf.Clamp01(_xpProgress / (float)_xpNeeded);
 
             FindHealth();
             ReadHealth();
@@ -110,6 +131,7 @@ namespace Items
             }
 
             if (_hpTexture) Destroy(_hpTexture);
+            if (_xpTexture) Destroy(_xpTexture);
         }
 
         public void SetVisible(bool visible)
@@ -122,7 +144,12 @@ namespace Items
                 if (panel) panel.SetActive(visible);
             }
 
-            if (visible) ReadHealth();
+            if (visible)
+            {
+                _xpFilling = false;
+                _xpShown = Mathf.Clamp01(_xpProgress / (float)_xpNeeded); // no animation from a stale value
+                ReadHealth();
+            }
             if (visible) _hpShown = _hpMax > 0f ? _hpCurrent / _hpMax : 0f; // no drain animation from a stale value
         }
 
@@ -172,13 +199,59 @@ namespace Items
 
         private void OnXpChanged(XpChangedEvent e)
         {
-            if (_xpText) _xpText.text = "XP  " + e.Total;
+            _xpProgress = e.Progress;
+            _xpNeeded = Mathf.Max(1, e.Needed);
+            _xpPoints = e.Points;
+
+            // Earning a point: the bar fills to the top, flashes, and starts again from what is left over.
+            if (e.PointEarned) _xpFilling = true;
+        }
+
+        private float XpTarget => _xpFilling ? 1f : Mathf.Clamp01(_xpProgress / (float)_xpNeeded);
+
+        /// <summary>
+        /// The XP bar looks different from the health bar on purpose: gold diagonal stripes that slide the other way,
+        /// a bright pulsing tip at the edge of the fill, and a white flash when a point is earned.
+        /// </summary>
+        private void UpdateXpBar()
+        {
+            if (!_xpFill) return;
+
+            var dt = Time.unscaledDeltaTime;
+            _xpShown = Mathf.MoveTowards(_xpShown, XpTarget, dt * (_xpFilling ? 0.9f : 0.5f));
+
+            if (_xpFilling && _xpShown >= 0.999f)
+            {
+                _xpFilling = false;
+                _xpShown = 0f;
+                _xpFlash = 1f;
+            }
+
+            _xpFlash = Mathf.MoveTowards(_xpFlash, 0f, dt * 1.6f);
+
+            var inner = HealthPanelSize.x - BarBorder * 2f;
+            _xpMask.sizeDelta = new Vector2(inner * _xpShown, 0f);
+
+            _xpScroll = Mathf.Repeat(_xpScroll - dt * 0.3f, 1f);
+            _xpFill.uvRect = new Rect(_xpScroll, 0f, 4f, 1f);
+
+            var pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f);
+            var colour = Color.Lerp(XpGold, Color.white, _xpFlash);
+            colour.a = 1f;
+            _xpFill.color = colour;
+
+            _xpEdge.anchoredPosition = new Vector2(inner * _xpShown, 0f);
+            _xpEdgeImage.color = new Color(1f, 0.95f, 0.7f, _xpShown > 0.01f ? Mathf.Lerp(0.35f, 1f, pulse) : 0f);
+
+            _xpBarText.text = _xpFilling ? "" : $"{_xpProgress} / {_xpNeeded}";
+            _xpText.text = $"POINTS  <b>{_xpPoints}</b>";
         }
 
         private void Update()
         {
             if (!_visible || !_hpFill) return;
 
+            UpdateXpBar();
             ReadHealth();
             var target = _hpMax > 0f ? Mathf.Clamp01(_hpCurrent / _hpMax) : 0f;
             _hpShown = Mathf.MoveTowards(_hpShown, target, Time.unscaledDeltaTime * 0.6f);
@@ -203,7 +276,7 @@ namespace Items
 
             color.a = 1f;
             _hpFill.color = color;
-            _hpText.text = Mathf.CeilToInt(_hpCurrent).ToString();
+            _hpText.text = "HP  " + Mathf.CeilToInt(_hpCurrent);
         }
 
         // ---------- building the canvases in code ----------
@@ -324,12 +397,76 @@ namespace Items
             fillRect.sizeDelta = new Vector2(innerWidth, 0f);
 
             _hpText = MakeText(frame.transform, "", 24, TextAnchor.MiddleLeft);
+            _hpText.fontStyle = FontStyle.Bold;
+            Outlined(_hpText);
             Stretch(_hpText.rectTransform, 12f);
             _hpText.color = new Color(1f, 1f, 1f, 0.9f);
 
-            _xpText = MakeText(panel, "XP  0", 34, TextAnchor.MiddleLeft);
-            Anchor(_xpText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -BarHeight - 8f),
-                new Vector2(HealthPanelSize.x, 44f), new Vector2(0.5f, 1f));
+            // XP: a second, slimmer bar under the health bar, then the points.
+            var xpFrameGo = new GameObject("XpBar", typeof(RectTransform), typeof(Image));
+            xpFrameGo.transform.SetParent(panel, false);
+            var xpFrame = xpFrameGo.GetComponent<Image>();
+            xpFrame.color = new Color(0.42f, 0.34f, 0.15f, 1f);
+            xpFrame.raycastTarget = false;
+            Anchor(xpFrame.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -BarHeight - 10f),
+                new Vector2(HealthPanelSize.x, XpBarHeight), new Vector2(0.5f, 1f));
+
+            var xpBack = new GameObject("Back", typeof(RectTransform), typeof(Image));
+            xpBack.transform.SetParent(xpFrameGo.transform, false);
+            var xpBackImage = xpBack.GetComponent<Image>();
+            xpBackImage.color = new Color(0.05f, 0.04f, 0.02f, 1f);
+            xpBackImage.raycastTarget = false;
+            Stretch(xpBackImage.rectTransform, BarBorder);
+
+            var xpMaskGo = new GameObject("Mask", typeof(RectTransform), typeof(RectMask2D));
+            xpMaskGo.transform.SetParent(xpBack.transform, false);
+            _xpMask = xpMaskGo.GetComponent<RectTransform>();
+            _xpMask.anchorMin = new Vector2(0f, 0f);
+            _xpMask.anchorMax = new Vector2(0f, 1f);
+            _xpMask.pivot = new Vector2(0f, 0.5f);
+            _xpMask.anchoredPosition = Vector2.zero;
+            _xpMask.sizeDelta = new Vector2(0f, 0f);
+
+            _xpTexture = MakeXpTexture();
+            var xpFillGo = new GameObject("Fill", typeof(RectTransform), typeof(RawImage));
+            xpFillGo.transform.SetParent(xpMaskGo.transform, false);
+            _xpFill = xpFillGo.GetComponent<RawImage>();
+            _xpFill.texture = _xpTexture;
+            _xpFill.raycastTarget = false;
+            var xpFillRect = _xpFill.rectTransform;
+            xpFillRect.anchorMin = new Vector2(0f, 0f);
+            xpFillRect.anchorMax = new Vector2(0f, 1f);
+            xpFillRect.pivot = new Vector2(0f, 0.5f);
+            xpFillRect.anchoredPosition = Vector2.zero;
+            xpFillRect.sizeDelta = new Vector2(innerWidth, 0f);
+            _xpFill.uvRect = new Rect(0f, 0f, 4f, 1f); // the stripes repeat along the bar
+
+            // The bright tip at the end of the fill. Outside the mask so it can glow past the edge.
+            var edgeGo = new GameObject("Tip", typeof(RectTransform), typeof(Image));
+            edgeGo.transform.SetParent(xpBack.transform, false);
+            _xpEdgeImage = edgeGo.GetComponent<Image>();
+            _xpEdgeImage.raycastTarget = false;
+            _xpEdge = _xpEdgeImage.rectTransform;
+            _xpEdge.anchorMin = new Vector2(0f, 0f);
+            _xpEdge.anchorMax = new Vector2(0f, 1f);
+            _xpEdge.pivot = new Vector2(0.5f, 0.5f);
+            _xpEdge.sizeDelta = new Vector2(6f, 0f);
+
+            // Three texts inside the bar: XP on the left, the progress in the middle, the points on the far right.
+            var xpLabel = MakeText(xpFrameGo.transform, "XP", 18, TextAnchor.MiddleLeft);
+            Stretch(xpLabel.rectTransform, 10f);
+            xpLabel.fontStyle = FontStyle.Bold;
+            Outlined(xpLabel);
+
+            _xpBarText = MakeText(xpFrameGo.transform, "", 17, TextAnchor.MiddleCenter);
+            Stretch(_xpBarText.rectTransform);
+            _xpBarText.color = new Color(1f, 1f, 1f, 0.95f);
+            Outlined(_xpBarText);
+
+            _xpText = MakeText(xpFrameGo.transform, "POINTS  0", 18, TextAnchor.MiddleRight);
+            Stretch(_xpText.rectTransform, 10f);
+            _xpText.supportRichText = true;
+            Outlined(_xpText);
 
             FinishWorldPanel(panel);
         }
@@ -405,6 +542,41 @@ namespace Items
 
             tex.Apply();
             return tex;
+        }
+
+        /// <summary>Gold diagonal stripes that tile sideways. Tinted by the bar colour and scrolled through uvRect.</summary>
+        private static Texture2D MakeXpTexture()
+        {
+            const int w = 64;
+            const int h = 16;
+
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            {
+                wrapMode = TextureWrapMode.Repeat,
+                filterMode = FilterMode.Bilinear
+            };
+
+            for (var x = 0; x < w; x++)
+            {
+                for (var y = 0; y < h; y++)
+                {
+                    // 16 pixels per stripe, so 64 divides evenly and the texture tiles without a seam.
+                    var wave = 0.5f + 0.5f * Mathf.Sin((x + y) / 16f * Mathf.PI * 2f);
+                    var v = Mathf.Lerp(0.68f, 1f, wave);
+                    tex.SetPixel(x, y, new Color(v, v, v, 1f));
+                }
+            }
+
+            tex.Apply();
+            return tex;
+        }
+
+        /// <summary>A dark outline, so white text stays readable on top of a bright bar.</summary>
+        private static void Outlined(Text text)
+        {
+            var outline = text.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
         }
 
         private Text MakeText(Transform parent, string content, int size, TextAnchor alignment)
