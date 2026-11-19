@@ -338,6 +338,7 @@ namespace Photography
                     .Append("  in frame ").Append(Mathf.RoundToInt(s.Coverage * 100f)).Append('%')
                     .Append("  framing ").Append(s.Framing.ToString("0.##"));
                 if (s.State > 1f) text.Append("  attacking x").Append(s.State.ToString("0.##"));
+                if (s.Special > 1f) text.Append("  bonus x").Append(s.Special.ToString("0.##"));
                 if (s.Repeat < 1f) text.Append("  seen before x").Append(s.Repeat.ToString("0.##"));
                 text.Append("</color></size>\n");
             }

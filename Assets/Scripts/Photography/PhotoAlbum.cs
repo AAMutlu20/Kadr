@@ -19,7 +19,8 @@ namespace Photography
         public const int PaidSlots = 12;
         public const int ExtraSlots = 12;
 
-        private static readonly float[] RepeatTable = { 1f, 0.5f, 0.25f, 0.1f };
+        /// <summary>Value of the 1st, 2nd, 3rd... photo of one type. The last entry holds for every later photo. Upgrades change it.</summary>
+        public float[] RepeatTable { get; set; } = { 1f, 0.5f, 0.25f, 0.1f };
 
         private readonly List<PhotoData> _photos = new();
         private readonly Dictionary<string, int> _shotsOfType = new();
@@ -34,6 +35,7 @@ namespace Photography
         public float RepeatMultiplier(string subjectId)
         {
             _shotsOfType.TryGetValue(subjectId, out var shots);
+            if (RepeatTable == null || RepeatTable.Length == 0) return 1f;
             return RepeatTable[Mathf.Min(shots, RepeatTable.Length - 1)];
         }
 

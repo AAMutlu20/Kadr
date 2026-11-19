@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 3888382706030324227}
   - component: {fileID: 3286582937994961830}
   - component: {fileID: 656181039967244489}
+  - component: {fileID: 4912673371409220375}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -168,17 +169,41 @@ MonoBehaviour:
     windupTime: 0.6
     recoverTime: 0.8
     raisedSpeed: 0.6
-    windupSpeed: 0.35
+    windupMoveSpeed: 0
     vulnerability: 1.5
     zoom: 12
   scoring:
     baseValue: 50
     maxDistance: 30
-    minVisibleFraction: 0.5
+    minCoverage: 0.15
     idealFill: 0.6
     attackBonus: 1.5
     groupBonusPerExtra: 0.1
     groupBonusMax: 0.3
+    perfectFramingBonus: 1
+    burningBonus: 1.25
+    disorientedBonus: 1.5
+  upgradeTree: {fileID: 11400000, guid: 8d10ea52b0573844eb4b8ba790c062c4, type: 2}
+  burnEffectPrefab: {fileID: 3394748212137337460, guid: 3735a9cf8cd9c354b9246746619a5929, type: 3}
+  burnEffectScale: 1
+--- !u!114 &4912673371409220375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766028040625068675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1235a3bfb5ab8c0478ac4656cc1f3835, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Photography.PlayerXp
+  defaultKillXp: 10
+  killXp:
+  - enemyId: Crawler
+    xp: 20
+  discoveryXp: 25
+  discoveryCoverage: 0.5
 --- !u!1 &1053865699183362461
 GameObject:
   m_ObjectHideFlags: 0
@@ -291,6 +316,8 @@ MonoBehaviour:
   aimMoveMultiplier: 0.6
   aimFovReduction: 10
   aimTransitionTime: 0.15
+  busyMoveMultiplier: 0.2
+  rackSlowTime: 1.2
   maxLowerWait: 3
   debugLowerKey: 1
 --- !u!1 &3380238498438034452
@@ -670,6 +697,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Photography.PhotoViewfinderView
   popupSeconds: 3
+  lensOutsideDarkness: 1
+  nightOutsideDarkness: 1
+  photoCamera: {fileID: 0}
   currencySuffix: " \u0440\u0443\u0431."
 --- !u!1001 &1830178146829379066
 PrefabInstance:

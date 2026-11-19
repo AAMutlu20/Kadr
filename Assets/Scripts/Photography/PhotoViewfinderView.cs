@@ -13,9 +13,13 @@ namespace Photography
     public class PhotoViewfinderView : MonoBehaviour
     {
         [SerializeField] private float popupSeconds = 3f;
-        [Tooltip("How dark everything outside the frame gets while the camera is up (0 = clear, 1 = black).")]
-        [SerializeField, Range(0f, 1f)] private float outsideDarkness = 1f;
-        [Tooltip("Currency Suffix")] //Lets go with 'руб.' for now, as it is what 1970s roubles looked like; the ₽ sign did not exist yet. Might change later.
+        [Tooltip("How dark everything outside the frame gets while the camera is up (0 = clear, 1 = pitch black).")]
+        [SerializeField, Range(0f, 1f)] private float lensOutsideDarkness = 1f;
+        [Tooltip("How dark everything outside the frame is while night vision (Reveal) is on. 1 = pitch black, so only the lens shows the green view.")]
+        [SerializeField, Range(0f, 1f)] private float nightOutsideDarkness = 1f;
+        [Tooltip("Shows the equipped flash ability and its cooldown. Empty = found automatically.")]
+        [SerializeField] private CameraController photoCamera;
+        [Tooltip("Currency Suffix")] //Let's go with руб. for now, as in the 1970s the ₽ sign did not exist yet. Might change later.
         [SerializeField] private string currencySuffix = " руб.";
 
         private EventBus _bus;
@@ -24,6 +28,8 @@ namespace Photography
         private RectTransform _lineTop, _lineBottom, _lineLeft, _lineRight;
         private Image _flash;
         private Text _popup;
+        private Text _abilityText;
+        private Image[] _dims;
         private float _flashAlpha;
         private float _popupUntil;
 
@@ -45,11 +51,13 @@ namespace Photography
             _viewfinder.transform.SetParent(canvasGo.transform, false);
             Stretch(_viewfinder.GetComponent<RectTransform>());
 
-            var dim = new Color(0f, 0f, 0f, outsideDarkness);
+            var dim = new Color(0f, 0f, 0f, lensOutsideDarkness);
             _dimTop = MakeImage(_viewfinder.transform, "DimTop", dim);
             _dimBottom = MakeImage(_viewfinder.transform, "DimBottom", dim);
             _dimLeft = MakeImage(_viewfinder.transform, "DimLeft", dim);
             _dimRight = MakeImage(_viewfinder.transform, "DimRight", dim);
+
+            _dims = new[] { _dimTop.GetComponent<Image>(), _dimBottom.GetComponent<Image>(), _dimLeft.GetComponent<Image>(), _dimRight.GetComponent<Image>() };
 
             var line = new Color(1f, 1f, 1f, 0.9f);
             _lineTop = MakeImage(_viewfinder.transform, "LineTop", line);
@@ -80,6 +88,21 @@ namespace Photography
             _popup.raycastTarget = false;
             popupGo.GetComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
             _popup.gameObject.SetActive(false);
+
+            // The equipped flash ability and its cooldown, top centre while the camera is up.
+            var abilityGo = new GameObject("Ability", typeof(RectTransform), typeof(Text), typeof(Outline));
+            abilityGo.transform.SetParent(_viewfinder.transform, false);
+            var abilityRect = abilityGo.GetComponent<RectTransform>();
+            abilityRect.anchorMin = abilityRect.anchorMax = new Vector2(0.5f, 0.93f);
+            abilityRect.pivot = new Vector2(0.5f, 0.5f);
+            abilityRect.sizeDelta = new Vector2(700f, 50f);
+
+            _abilityText = abilityGo.GetComponent<Text>();
+            _abilityText.font = font;
+            _abilityText.fontSize = 28;
+            _abilityText.alignment = TextAnchor.MiddleCenter;
+            _abilityText.raycastTarget = false;
+            abilityGo.GetComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
         }
 
         private void OnEnable()
@@ -88,6 +111,7 @@ namespace Photography
 
             _bus.Subscribe<CameraRaisedEvent>(OnRaised);
             _bus.Subscribe<PhotoTakenEvent>(OnPhoto);
+            _bus.Subscribe<NightVisionEvent>(OnNightVision);
         }
 
         private void OnDisable()
@@ -96,6 +120,7 @@ namespace Photography
 
             _bus.Unsubscribe<CameraRaisedEvent>(OnRaised);
             _bus.Unsubscribe<PhotoTakenEvent>(OnPhoto);
+            _bus.Unsubscribe<NightVisionEvent>(OnNightVision);
             _bus = null;
         }
 
@@ -109,6 +134,34 @@ namespace Photography
             }
 
             if (_popup.gameObject.activeSelf && Time.unscaledTime >= _popupUntil) _popup.gameObject.SetActive(false);
+
+            if (_viewfinder.activeSelf) UpdateAbilityLabel();
+        }
+
+        private void UpdateAbilityLabel()
+        {
+            if (!photoCamera) photoCamera = FindAnyObjectByType<CameraController>();
+
+            var ability = photoCamera ? photoCamera.EquippedAbility : CameraAbility.None;
+            var data = ability == CameraAbility.None || !CameraUpgradeTree.Active ? null : CameraUpgradeTree.Active.Ability(ability);
+            if (data == null)
+            {
+                _abilityText.text = "";
+                return;
+            }
+
+            var left = photoCamera.AbilityCooldownLeft;
+            _abilityText.text = left <= 0f
+                ? $"{data.title}  <color=#80e090>READY</color>"
+                : $"{data.title}  <color=#aaaaaa>{left:0.0} s</color>";
+            _abilityText.supportRichText = true;
+            _abilityText.color = Color.white;
+        }
+
+        private void OnNightVision(NightVisionEvent e)
+        {
+            var colour = new Color(0f, 0f, 0f, e.Active ? nightOutsideDarkness : lensOutsideDarkness);
+            foreach (var dim in _dims) dim.color = colour;
         }
 
         private void OnRaised(CameraRaisedEvent e)
@@ -135,6 +188,7 @@ namespace Photography
                 {
                     lines.Append(s.Name).Append("   ").Append(Mathf.RoundToInt(s.Score)).Append(currencySuffix);
                     if (s.Coverage < 0.98f) lines.Append("   <color=#a0c0e0>").Append(Mathf.RoundToInt(s.Coverage * 100f)).Append("% in frame</color>");
+                    if (s.Special > 1f) lines.Append("   <color=#a0e0a0>bonus x").Append(s.Special.ToString("0.##")).Append("</color>");
                     if (s.Repeat < 1f) lines.Append("   <color=#e0a060>seen before x").Append(s.Repeat.ToString("0.##")).Append("</color>");
                     lines.Append('\n');
                 }

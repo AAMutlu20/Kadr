@@ -50,6 +50,14 @@ namespace Photography
         private void OnEnable() => All.Add(this);
         private void OnDisable() => All.Remove(this);
 
+        public EnemyController Enemy => _enemy;
+
+        /// <summary>On fire right now (Fireshow).</summary>
+        public bool IsBurning => _enemy && _enemy.TryGetComponent<EnemyStatus>(out var status) && status.IsBurning;
+
+        /// <summary>Turned against the other enemies right now (Disorient).</summary>
+        public bool IsDisoriented => _enemy && _enemy.TryGetComponent<EnemyStatus>(out var status) && status.IsDisoriented;
+
         /// <summary>The attack pose is worth more.</summary>
         public bool IsAttacking => _enemy && _enemy.Fsm.Current is EnemyAttackState;
 

@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53c32dc58f923c84ebb65639f9a26ad9, type: 3}
+  m_Name: CameraUpgradeTree
+  m_EditorClassIdentifier: Assembly-CSharp::Photography.CameraUpgradeTree
+  xpUnit: 100
+  branches:
+  - branch: 1
+    title: REPORTER
+    tagline: '"Okay, damn this job, I just need to survive down here!" Shorter windup,
+      less exposure, faster flash.'
+    tiers:
+    - title: Quick shutter
+      description: Shorten your windup and take less extra damage while in camera
+        mode.
+      costUnits: 1
+      sets:
+      - stat: 1
+        value: 0.45
+      - stat: 5
+        value: 1.25
+    - title: Fast flash
+      description: Abilities recharge twice as fast. Camera equips quicker.
+      costUnits: 2
+      sets:
+      - stat: 14
+        value: 0.5
+      - stat: 0
+        value: 0.25
+    - title: Steady hands
+      description: Move during windup. Recovery is halved.
+      costUnits: 4
+      sets:
+      - stat: 4
+        value: 0.5
+      - stat: 2
+        value: 0.4
+    - title: Instant
+      description: Remove camera windup and take no extra damage when in camera mode.
+      costUnits: 7
+      sets:
+      - stat: 1
+        value: 0
+      - stat: 5
+        value: 1
+  - branch: 2
+    title: ARTIST
+    tagline: "\"This is just fascinating! So many opportunities present themselves...\"
+      \nEarn more per photo. Camera gets slower and riskier to use."
+    tiers:
+    - title: Telephoto
+      description: Increase camera zoom and subject detection range.
+      costUnits: 1
+      sets:
+      - stat: 6
+        value: 20
+      - stat: 7
+        value: 45
+    - title: Studio eye
+      description: Repeat photos lose less value.
+      costUnits: 2
+      sets:
+      - stat: 11
+        value: 0.6
+      - stat: 12
+        value: 0.35
+      - stat: 13
+        value: 0.15
+    - title: Long exposure
+      description: 'Camera windup time increases. Deal more damage to photographed
+        enemies and get more money from the group bonus.  '
+      costUnits: 4
+      sets:
+      - stat: 8
+        value: 2
+      - stat: 9
+        value: 0.6
+      - stat: 1
+        value: 0.9
+    - title: Masterpiece
+      description: A perfectly framed, fully visible subject is worth way more than
+        normal.
+      costUnits: 7
+      sets:
+      - stat: 10
+        value: 1.5
+  abilities:
+  - ability: 1
+    title: FLASH STUN
+    description: The flash freezes every affected enemy in the photo. Bosses are
+      stunned half as long.
+    damagePerSecond: 5
+    levels:
+    - description: Stun 0.5 s
+      duration: 0.5
+      cooldown: 6
+      costUnits: 1
+    - description: Stun 1 s
+      duration: 1
+      cooldown: 6
+      costUnits: 2
+    - description: Stun 1.5 s
+      duration: 1.5
+      cooldown: 6
+      costUnits: 4
+  - ability: 2
+    title: DISORIENT
+    description: Enemies in the photo turn on each other. Bosses are immune.
+    damagePerSecond: 5
+    levels:
+    - description: Fight each other for 1.5 s
+      duration: 1.5
+      cooldown: 15
+      costUnits: 1
+    - description: Fight each other for 4 s
+      duration: 4
+      cooldown: 15
+      costUnits: 2
+    - description: Fight each other until one dies
+      duration: 0
+      cooldown: 30
+      costUnits: 4
+  - ability: 3
+    title: FIRESHOW
+    description: Enemies in the photo catch fire and burn over time.
+    damagePerSecond: 5
+    levels:
+    - description: Burns for 3 s
+      duration: 3
+      cooldown: 12
+      costUnits: 1
+    - description: Burns for 4 s
+      duration: 4
+      cooldown: 12
+      costUnits: 2
+    - description: Burns for 5 s
+      duration: 5
+      cooldown: 12
+      costUnits: 4
+  - ability: 4
+    title: REVEAL
+    description: After a photo the lens switches to night vision for a time. Lowering
+      the camera ends this effect instantly.
+    damagePerSecond: 5
+    levels:
+    - description: Night vision for 5 s
+      duration: 5
+      cooldown: 25
+      costUnits: 1
+    - description: Night vision for 10 s
+      duration: 10
+      cooldown: 25
+      costUnits: 2
+    - description: Night vision for 15 s
+      duration: 15
+      cooldown: 25
+      costUnits: 4

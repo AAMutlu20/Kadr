@@ -894,6 +894,7 @@ GameObject:
   - component: {fileID: 2174806939769535620}
   - component: {fileID: 6940776558655160008}
   - component: {fileID: 8540891682388370867}
+  - component: {fileID: 7055906510014109138}
   m_Layer: 10
   m_Name: Album
   m_TagString: Untagged
@@ -956,6 +957,22 @@ MonoBehaviour:
   onClicked:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7055906510014109138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2016744944522228528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99dec78a4f2f893479e5e7a601276b18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Photography.CameraUpgradesOverlay
+  inventory: {fileID: 0}
+  inventoryView: {fileID: 0}
+  bookHotspot: {fileID: 8540891682388370867}
+  upgradeTree: {fileID: 11400000, guid: 8d10ea52b0573844eb4b8ba790c062c4, type: 2}
 --- !u!1 &2132966110057118963
 GameObject:
   m_ObjectHideFlags: 0

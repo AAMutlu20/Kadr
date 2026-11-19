@@ -20,6 +20,12 @@ namespace Photography
         [Tooltip("Extra worth per additional subject in the same photo, up to the maximum.")]
         public float groupBonusPerExtra = 0.1f;
         public float groupBonusMax = 0.3f;
+        [Tooltip("Multiplier for a subject that is fully visible and well framed. 1 = no bonus (the Masterpiece upgrade raises it).")]
+        public float perfectFramingBonus = 1f;
+        [Tooltip("Multiplier for a subject that is on fire when photographed.")]
+        public float burningBonus = 1.25f;
+        [Tooltip("Multiplier for a subject that is turned against the others (disoriented).")]
+        public float disorientedBonus = 1.5f;
     }
 
     /// <summary>
@@ -68,13 +74,19 @@ namespace Photography
                 var framing = Framing(cam, frame, clipped, settings.idealFill);
                 var state = subject.IsAttacking ? settings.attackBonus : 1f;
                 var repeat = album.RepeatMultiplier(subject.SubjectId);
-                var score = settings.baseValue * subject.Rarity * subject.Danger * coverage * framing * state * repeat;
+
+                var special = 1f;
+                if (subject.IsBurning) special *= settings.burningBonus;
+                if (subject.IsDisoriented) special *= settings.disorientedBonus;
+                if (settings.perfectFramingBonus > 1f && coverage >= 0.97f && framing >= 0.85f) special *= settings.perfectFramingBonus;
+
+                var score = settings.baseValue * subject.Rarity * subject.Danger * coverage * framing * state * special * repeat;
 
                 into.Subjects.Add(new PhotoSubjectScore
                 {
                     Id = subject.SubjectId, Name = subject.DisplayName, Rarity = subject.Rarity,
                     Danger = subject.Danger, Coverage = coverage, Framing = framing, State = state,
-                    Repeat = repeat, Score = score
+                    Special = special, Source = subject, Repeat = repeat, Score = score
                 });
                 total += score;
             }
@@ -120,7 +132,7 @@ namespace Photography
             return true;
         }
 
-        /// <summary>0 to 1. Big enough in the frame, and near the middle of the visible part.</summary>
+        /// <summary>0..1. Big enough in the frame, and near the middle of the visible part.</summary>
         private static float Framing(Camera cam, Rect frame, Rect clipped, float idealFill)
         {
             var fill = clipped.height / frame.height;

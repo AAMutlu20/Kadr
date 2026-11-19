@@ -48,6 +48,14 @@ namespace Enemies
         [Tooltip("Seconds after the attack starts at which the hit lands. Match it to the swing frame in the clip.")]
         public float attackHitDelay = 0.6f;
 
+        [Header("Camera flash")]
+        [Tooltip("1 = full stun time, 0.5 = half (bosses), 0 = immune.")]
+        public float flashStunScale = 1f;
+        [Tooltip("Tick for bosses: Disorient does nothing to them.")]
+        public bool immuneToDisorient;
+        [Tooltip("Tick for enemies that cannot burn.")]
+        public bool immuneToFire;
+
         [Header("Corpse")]
         [Tooltip("Seconds the body stays before the object is destroyed.")]
         public float corpseLifetime = 10f;

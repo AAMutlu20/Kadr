@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Core;
 using Events;
 using FSM;
@@ -49,6 +50,14 @@ namespace Enemies
         [Tooltip("Layers that block line of sight: the level geometry. Do NOT include the Player or Enemy layers.")]
         [SerializeField] private LayerMask sightBlockers = 1;
 
+        /// <summary>Every active enemy. Disorient uses it to find someone for an enemy to fight.</summary>
+        public static readonly List<EnemyController> All = new();
+
+        private Transform _playerTarget;
+        private Health _playerHealth;
+        private IDamageable _playerDamageable;
+        private bool _wasStopped;
+
         private Health _health;
         private Health _targetHealth;
         private IDamageable _targetDamageable;
@@ -66,6 +75,14 @@ namespace Enemies
         public EnemyDeadState Dead { get; private set; }
 
         public bool HasTarget => Target && !_targetHealth.IsDead;
+
+        /// <summary>True while the enemy is fighting another enemy instead of the player (Disorient).</summary>
+        public bool TargetIsEnemy { get; private set; }
+
+        /// <summary>Frozen in place by the camera flash. The state machine does not tick and the animation stops.</summary>
+        public bool Stunned { get; private set; }
+
+        public bool IsDead => _health.IsDead;
 
         /// <summary>Flat (XZ) distance to the target. Only valid when HasTarget.</summary>
         public float DistanceToTarget
@@ -101,6 +118,10 @@ namespace Enemies
                 Target = player.transform;
                 _targetHealth = player.GetComponent<Health>();
                 _targetDamageable = player.GetComponent<IDamageable>();
+
+                _playerTarget = Target;
+                _playerHealth = _targetHealth;
+                _playerDamageable = _targetDamageable;
             }
             else
             {
@@ -110,6 +131,7 @@ namespace Enemies
 
         private void OnEnable()
         {
+            All.Add(this);
             _health.Died += OnDied;
 
             if (GameServices.TryGet(out EventBus bus))
@@ -120,6 +142,7 @@ namespace Enemies
 
         private void OnDisable()
         {
+            All.Remove(this);
             _health.Died -= OnDied;
 
             if (GameServices.TryGet(out EventBus bus))
@@ -133,6 +156,12 @@ namespace Enemies
             if (!_ready)
             {
                 TryActivateOnNavMesh();
+                return;
+            }
+
+            if (Stunned)
+            {
+                HoldStill();
                 return;
             }
 
@@ -165,6 +194,63 @@ namespace Enemies
 
             var normalized = Mathf.Clamp01(Agent.velocity.magnitude / stats.MaxSpeed);
             animator.SetFloat(SpeedHash, normalized, 0.1f, Time.deltaTime);
+        }
+
+        // Camera flash effects (see EnemyStatus)
+
+        /// <summary>Freezes or releases the enemy. While frozen nothing ticks, so an attack in progress waits too.</summary>
+        public void SetStunned(bool stunned)
+        {
+            if (Stunned == stunned) return;
+            Stunned = stunned;
+
+            if (stunned)
+            {
+                if (Agent.enabled && Agent.isOnNavMesh)
+                {
+                    _wasStopped = Agent.isStopped;
+                    Agent.isStopped = true;
+                    Agent.velocity = Vector3.zero;
+                }
+
+                if (animator) animator.speed = 0f;
+            }
+            else
+            {
+                if (Agent.enabled && Agent.isOnNavMesh) Agent.isStopped = _wasStopped;
+                if (animator) animator.speed = 1f;
+            }
+        }
+
+        private void HoldStill()
+        {
+            if (Agent.enabled && Agent.isOnNavMesh) Agent.velocity = Vector3.zero;
+        }
+
+        /// <summary>Disorient: fight this enemy instead of the player. The target must have a Health.</summary>
+        public void SetTargetOverride(Transform enemy)
+        {
+            if (!enemy || !enemy.TryGetComponent<Health>(out var health) || !enemy.TryGetComponent<IDamageable>(out var damageable)) return;
+
+            Target = enemy;
+            _targetHealth = health;
+            _targetDamageable = damageable;
+            TargetIsEnemy = true;
+
+            if (_ready && !_health.IsDead && !Stunned) BeginChase();
+        }
+
+        /// <summary>Back to hunting the player. The state machine starts over from Idle and notices the player again.</summary>
+        public void ResetTarget()
+        {
+            if (!TargetIsEnemy) return;
+
+            Target = _playerTarget;
+            _targetHealth = _playerHealth;
+            _targetDamageable = _playerDamageable;
+            TargetIsEnemy = false;
+
+            if (_ready && !_health.IsDead && !Stunned) Fsm.ChangeState(Idle);
         }
 
         // Used by the states
@@ -230,6 +316,7 @@ namespace Enemies
 
         private void OnDied()
         {
+            SetStunned(false); // the death animation must be able to play
             if (GameServices.TryGet(out EventBus bus))
             {
                 bus.Publish(new EnemyKilledEvent(stats.enemyId, transform.position));

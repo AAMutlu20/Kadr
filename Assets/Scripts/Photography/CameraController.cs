@@ -64,9 +64,26 @@ namespace Photography
         [Tooltip("What the photo shows. Leave out the weapon/arms layer, the UI layer and the Inventory layer.")]
         [SerializeField] private LayerMask photoCullingMask = ~0;
 
-        [Header("Tuning")]
+        [Header("Tuning (the base camera. Upgrades change a copy of these at runtime)")]
         [SerializeField] private CameraStats stats = new();
         [SerializeField] private ScoringSettings scoring = new();
+
+        [Header("Upgrades")]
+        [Tooltip("The upgrade tree asset. Empty = a default tree made in memory. Assign the same asset everywhere.")]
+        [SerializeField] private CameraUpgradeTree upgradeTree;
+
+        [Header("Effects")]
+        [Tooltip("Your fire particle system. It is spawned on every enemy hit by Fireshow, in the middle of its body. Optional.")]
+        [SerializeField] private GameObject burnEffectPrefab;
+        [Tooltip("Scales the fire effect, for big or small enemies.")]
+        [SerializeField, Min(0.1f)] private float burnEffectScale = 1f;
+
+        private CameraStats _stats;
+        private ScoringSettings _scoring;
+        private CameraLoadout _loadout = new();
+        private NightVision _night;
+        private float _abilityReadyAt;
+        private float _abilityCooldown;
 
         private State _state = State.Down;
         private float _timer;
@@ -78,7 +95,12 @@ namespace Photography
         public PhotoAlbum Album { get; } = new();
 
         public bool IsRaised => _state != State.Down;
-        public CameraStats Stats => stats;
+        public CameraStats Stats => _stats;
+
+        /// <summary>The equipped ability, how long until it can fire again, and its full cooldown.</summary>
+        public CameraAbility EquippedAbility => CameraProgress.Current.Equipped;
+        public float AbilityCooldownLeft => Mathf.Max(0f, _abilityReadyAt - Time.time);
+        public float AbilityCooldownTotal => _abilityCooldown;
 
         private void Awake()
         {
@@ -87,10 +109,31 @@ namespace Photography
             if (!player) player = GetComponentInParent<PlayerController>();
             if (!health) health = GetComponentInParent<Health>();
             if (!inventory) inventory = GetComponentInParent<Inventory>();
+
+            _night = GetComponent<NightVision>();
+            if (!_night) _night = gameObject.AddComponent<NightVision>();
+
+            upgradeTree = CameraUpgradeTree.Resolve(upgradeTree);
+            ApplyUpgrades();
+        }
+
+        private void OnEnable()
+        {
+            CameraProgress.Current.Changed += ApplyUpgrades;
+        }
+
+        /// <summary>Works out the camera's real numbers from the base values plus the owned upgrades.</summary>
+        private void ApplyUpgrades()
+        {
+            _stats = JsonUtility.FromJson<CameraStats>(JsonUtility.ToJson(stats));
+            _scoring = JsonUtility.FromJson<ScoringSettings>(JsonUtility.ToJson(scoring));
+            _loadout = CameraProgress.Current.Apply(upgradeTree, _stats, _scoring);
+            Album.RepeatTable = _loadout.repeatTable;
         }
 
         private void OnDisable()
         {
+            CameraProgress.Current.Changed -= ApplyUpgrades;
             Lower();
         }
 
@@ -138,7 +181,7 @@ namespace Photography
                     if (_timer > 0f) break;
                     if (!held) { Lower(); break; }
                     SetVulnerable(false);
-                    if (player) player.SpeedMultiplier = stats.raisedSpeed;
+                    if (player) player.SpeedMultiplier = _stats.raisedSpeed;
                     _state = State.Ready;
                     break;
             }
@@ -150,15 +193,15 @@ namespace Photography
 
             // WeaponController writes the field of view every frame in Update, so the zoom is applied after it.
             _zoomBlend = Mathf.MoveTowards(_zoomBlend, IsRaised ? 1f : 0f, Time.deltaTime / 0.2f);
-            if (_zoomBlend > 0f) cam.fieldOfView -= stats.zoom * Mathf.SmoothStep(0f, 1f, _zoomBlend);
+            if (_zoomBlend > 0f) cam.fieldOfView -= _stats.zoom * Mathf.SmoothStep(0f, 1f, _zoomBlend);
 
             if (_shutter && _state == State.Windup)
             {
                 _shutter = false;
                 TakePhoto();
-                if (player) player.SpeedMultiplier = stats.raisedSpeed; // free to move again, still vulnerable
+                if (player) player.SpeedMultiplier = _stats.raisedSpeed; // free to move again, still vulnerable
                 _state = State.Recover;
-                _timer = stats.recoverTime;
+                _timer = _stats.recoverTime;
             }
         }
 
@@ -173,7 +216,7 @@ namespace Photography
         private void Raise()
         {
             _state = State.Raising;
-            _timer = stats.raiseTime;
+            _timer = _stats.raiseTime;
 
             if (weapons)
             {
@@ -181,7 +224,7 @@ namespace Photography
                 weapons.SetLowered(true);
             }
 
-            if (player) player.SpeedMultiplier = stats.raisedSpeed;
+            if (player) player.SpeedMultiplier = _stats.raisedSpeed;
             Publish(new CameraRaisedEvent(true, frameFraction));
         }
 
@@ -191,6 +234,7 @@ namespace Photography
 
             _state = State.Down;
             _shutter = false;
+            if (_night) _night.End();
             SetVulnerable(false);
             if (player) player.SpeedMultiplier = 1f;
 
@@ -206,16 +250,16 @@ namespace Photography
         private void StartWindup()
         {
             SetVulnerable(true);
-            if (player) player.SpeedMultiplier = stats.windupMoveSpeed;
+            if (player) player.SpeedMultiplier = _stats.windupMoveSpeed;
 
             _state = State.Windup;
-            _timer = stats.windupTime;
+            _timer = _stats.windupTime;
             if (_timer <= 0f) _shutter = true;
         }
 
         private void SetVulnerable(bool vulnerable)
         {
-            if (health) health.DamageTakenMultiplier = vulnerable ? stats.vulnerability : 1f;
+            if (health) health.DamageTakenMultiplier = vulnerable ? _stats.vulnerability : 1f;
         }
 
         // ---------- the photo ----------
@@ -231,7 +275,7 @@ namespace Photography
         private void TakePhoto()
         {
             var photo = new PhotoData();
-            PhotoScorer.Evaluate(cam, FrameRect(), sightBlockers, Album, scoring, photo);
+            PhotoScorer.Evaluate(cam, FrameRect(), sightBlockers, Album, _scoring, photo);
 
             // Only photos that are worth something need a picture.
             if (photo.Score > 0f) photo.Image = Capture();
@@ -239,11 +283,45 @@ namespace Photography
             var kept = Album.RegisterShot(photo);
             Publish(new PhotoTakenEvent(photo, kept));
 
+            FireAbility(photo);
+
             if (!kept && photo.Image)
             {
                 Destroy(photo.Image);
                 photo.Image = null;
             }
+        }
+
+        /// <summary>
+        /// The equipped flash ability goes off after the photo is scored and captured, so it never changes that photo.
+        /// It only uses up its cooldown if it did something. A photo while it is cooling down is a plain flash.
+        /// </summary>
+        private void FireAbility(PhotoData photo)
+        {
+            var ability = CameraProgress.Current.Equipped;
+            if (ability == CameraAbility.None || Time.time < _abilityReadyAt) return;
+
+            var level = upgradeTree.Level(ability, CameraProgress.Current.AbilityLevel(ability));
+            var data = upgradeTree.Ability(ability);
+            if (level == null || data == null) return;
+
+            var used = false;
+
+            if (ability == CameraAbility.Reveal)
+            {
+                cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
+                _night.Begin(level.duration);
+                used = true;
+            }
+            else
+            {
+                used = FlashAbilities.Apply(ability, data, level, photo, gameObject, burnEffectPrefab, burnEffectScale) > 0;
+            }
+
+            if (!used) return;
+
+            _abilityCooldown = level.cooldown * _loadout.abilityCooldownMultiplier;
+            _abilityReadyAt = Time.time + _abilityCooldown;
         }
 
         private Texture2D Capture()

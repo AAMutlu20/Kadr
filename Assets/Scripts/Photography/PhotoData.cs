@@ -13,6 +13,8 @@ namespace Photography
         public float Coverage;  // 0..1, the share of the subject that is in the photo and not behind a wall
         public float Framing;   // 0..1, size and centring
         public float State;     // 1 normally, more while it attacks
+        public float Special;   // 1 normally. Burning, disoriented, and the perfect framing bonus multiply into it
+        public Photographable Source; // the enemy that was photographed, so the flash can affect it
         public float Repeat;    // 1 for the first photo of this type in the run, then less
         public float Score;
     }
