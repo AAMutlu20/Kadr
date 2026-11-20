@@ -4,9 +4,10 @@ using UnityEngine;
 namespace Enemies
 {
     /// <summary>
-    /// A melee attack on a timer, so it does not depend on animation events:
-    /// start the animation, land the hit at Stats.attackHitDelay, and after Stats.attackCooldown either
-    /// swing again (player still in reach), chase again (player stepped away) or go idle (player is dead).
+    /// A melee attack: start the animation and land the hit either at Stats.attackHitDelay (timer) or, when
+    /// Stats.hitFromAnimationEvent is ticked, from the clip's DealDamage Animation Event (EnemyAnimationEvents).
+    /// After Stats.attackCooldown either swing again (player still in reach), chase again (player stepped away)
+    /// or go idle (player is dead).
     /// The enemy stands still and turns to face the player while attacking.
     /// </summary>
     public class EnemyAttackState : IState
@@ -38,7 +39,8 @@ namespace Enemies
             _enemy.FaceTarget(deltaTime);
             _timer += deltaTime;
 
-            if (!_hitLanded && _timer >= _enemy.Stats.attackHitDelay)
+            // With an Animation Event on the swing frame the clip decides when the hit lands, not this timer.
+            if (!_enemy.Stats.hitFromAnimationEvent && !_hitLanded && _timer >= _enemy.Stats.attackHitDelay)
             {
                 _hitLanded = true;
                 _enemy.DealDamage();

@@ -20,8 +20,18 @@ MonoBehaviour:
   detectionRange: 35
   loseRange: 40
   loseSightTime: 1.5
-  attackRange: 2.5
+  attackRange: 3.5
   attackDamage: 25
   attackCooldown: 2.5
-  attackHitDelay: 1.06
+  attackHitDelay: 0.86
+  hitFromAnimationEvent: 1
+  headDamageScale: 1.2
+  legDamageScale: 0.7
+  legSlowScale: 0.3
+  legHitsToStopSprint: 3
+  headHeight: 0.8
+  legHeight: 0.45
+  flashStunScale: 1
+  immuneToDisorient: 0
+  immuneToFire: 0
   corpseLifetime: 10

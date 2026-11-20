@@ -47,6 +47,22 @@ namespace Enemies
         public float attackCooldown = 1.6f;
         [Tooltip("Seconds after the attack starts at which the hit lands. Match it to the swing frame in the clip.")]
         public float attackHitDelay = 0.6f;
+        [Tooltip("Tick when the attack clip has a DealDamage Animation Event. The hit then lands on that frame and the delay above is ignored.")]
+        public bool hitFromAnimationEvent;
+
+        [Header("Hit zones (shots)")]
+        [Tooltip("Damage multiplier for a head hit. Zombie 1.5, crawler 1.2.")]
+        public float headDamageScale = 1.5f;
+        [Tooltip("Damage multiplier for a leg hit.")]
+        public float legDamageScale = 0.5f;
+        [Tooltip("Speed multiplier once the legs have been hit (walking and sprinting). Zombie 0.3, crawler 0.5.")]
+        public float legSlowScale = 0.3f;
+        [Tooltip("Leg hits needed to cancel the sprint for good. 0 = legs never cancel the sprint. Crawler 2.")]
+        public int legHitsToStopSprint;
+        [Tooltip("Only for enemies without HitZone colliders: a hit above this share of the body height is a head hit.")]
+        [Range(0f, 1f)] public float headHeight = 0.8f;
+        [Tooltip("Only for enemies without HitZone colliders: a hit below this share of the body height is a leg hit.")]
+        [Range(0f, 1f)] public float legHeight = 0.35f;
 
         [Header("Camera flash")]
         [Tooltip("1 = full stun time, 0.5 = half (bosses), 0 = immune.")]

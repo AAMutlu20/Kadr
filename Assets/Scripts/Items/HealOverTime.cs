@@ -24,6 +24,17 @@ namespace Items
         /// <summary>True while any healing is still to come. The HUD can show a small "+" from it later.</summary>
         public bool IsHealing => _pools.Count > 0;
 
+        /// <summary>Health still to come from all running pools. The HUD draws it as the grey preview.</summary>
+        public float Pending
+        {
+            get
+            {
+                var total = 0f;
+                for (var i = 0; i < _pools.Count; i++) total += _pools[i].Remaining;
+                return total;
+            }
+        }
+
         public static void Apply(GameObject user, float amount, float seconds)
         {
             if (amount <= 0f || seconds <= 0f) return;

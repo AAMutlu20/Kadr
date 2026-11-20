@@ -1,4 +1,5 @@
 using Core;
+using Enemies;
 using Events;
 using Gameplay;
 using UnityEngine;
@@ -114,7 +115,10 @@ namespace Weapons
                 var target = hit.collider.GetComponentInParent<IDamageable>();
                 if (target != null)
                 {
-                    target.TakeDamage(Config.damage, Context.Shooter);
+                    // Enemies scale the damage by the body part that was hit (head, legs) and slow down on leg hits.
+                    var enemy = hit.collider.GetComponentInParent<EnemyController>();
+                    if (enemy) enemy.TakeShot(hit, Config.damage, Context.Shooter);
+                    else target.TakeDamage(Config.damage, Context.Shooter);
 
                     // The target decides what being hit looks like (blood, sparks...), we only say where.
                     hit.collider.GetComponentInParent<IHitReceiver>()?.OnHit(hit.point, hit.normal);

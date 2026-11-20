@@ -70,6 +70,10 @@ namespace Items
         private GameObject _overlayRoot;
 
         private RectTransform _hpMask;
+        private RectTransform _hpPreview; // mask of the grey bar: where health will end up once the healing over time is done
+        private RawImage _hpPreviewFill;
+        private HealOverTime _healer;
+        private float _previewShown;
         private RawImage _hpFill;
         private Text _hpText;
         private Texture2D _hpTexture;
@@ -193,6 +197,7 @@ namespace Items
         {
             if (!playerHealth) return;
 
+            if (!_healer || _healer.gameObject != playerHealth.gameObject) _healer = playerHealth.GetComponent<HealOverTime>();
             _hpCurrent = playerHealth.Current;
             _hpMax = playerHealth.Max;
         }
@@ -260,9 +265,16 @@ namespace Items
             var inner = HealthPanelSize.x - BarBorder * 2f;
             _hpMask.sizeDelta = new Vector2(inner * _hpShown, 0f);
 
+            // Grey preview: current health plus everything still to be healed. The real bar fills it up.
+            var pending = _healer ? _healer.Pending : 0f;
+            var previewTarget = _hpMax > 0f ? Mathf.Clamp01((_hpCurrent + pending) / _hpMax) : 0f;
+            _previewShown = Mathf.MoveTowards(_previewShown, Mathf.Max(previewTarget, _hpShown), Time.unscaledDeltaTime * 0.6f);
+            _hpPreview.sizeDelta = new Vector2(inner * _previewShown, 0f);
+
             var low = 1f - target;
             _hpScroll = Mathf.Repeat(_hpScroll + Time.unscaledDeltaTime * Mathf.Lerp(0.12f, 0.45f, low), 1f);
             _hpFill.uvRect = new Rect(_hpScroll, 0f, 1f, 1f);
+            _hpPreviewFill.uvRect = new Rect(_hpScroll, 0f, 1f, 1f);
 
             var color = _hpShown > 0.5f
                 ? Color.Lerp(HpCaution, HpFine, (_hpShown - 0.5f) * 2f)
@@ -276,7 +288,7 @@ namespace Items
 
             color.a = 1f;
             _hpFill.color = color;
-            _hpText.text = "HP  " + Mathf.CeilToInt(_hpCurrent);
+            _hpText.text = "HP  " + Mathf.CeilToInt(_hpCurrent) + (pending >= 0.5f ? "  +" + Mathf.CeilToInt(pending) : "");
         }
 
         // ---------- building the canvases in code ----------
@@ -372,8 +384,32 @@ namespace Items
             backImage.raycastTarget = false;
             Stretch(backImage.rectTransform, BarBorder);
 
-            // The mask is as wide as the filled part. Its child keeps full width, so it is clipped, not squashed.
+            // Grey preview bar, drawn under the real fill. Same masked, scrolling texture as the real bar, in grey.
             var innerWidth = HealthPanelSize.x - BarBorder * 2f;
+            _hpTexture = MakeBarTexture();
+            var previewMaskGo = new GameObject("HealPreviewMask", typeof(RectTransform), typeof(RectMask2D));
+            previewMaskGo.transform.SetParent(back.transform, false);
+            _hpPreview = previewMaskGo.GetComponent<RectTransform>();
+            _hpPreview.anchorMin = new Vector2(0f, 0f);
+            _hpPreview.anchorMax = new Vector2(0f, 1f);
+            _hpPreview.pivot = new Vector2(0f, 0.5f);
+            _hpPreview.anchoredPosition = Vector2.zero;
+            _hpPreview.sizeDelta = Vector2.zero;
+
+            var previewFillGo = new GameObject("Fill", typeof(RectTransform), typeof(RawImage));
+            previewFillGo.transform.SetParent(previewMaskGo.transform, false);
+            _hpPreviewFill = previewFillGo.GetComponent<RawImage>();
+            _hpPreviewFill.texture = _hpTexture;
+            _hpPreviewFill.color = new Color(0.6f, 0.62f, 0.6f, 1f);
+            _hpPreviewFill.raycastTarget = false;
+            var previewFillRect = _hpPreviewFill.rectTransform;
+            previewFillRect.anchorMin = new Vector2(0f, 0f);
+            previewFillRect.anchorMax = new Vector2(0f, 1f);
+            previewFillRect.pivot = new Vector2(0f, 0.5f);
+            previewFillRect.anchoredPosition = Vector2.zero;
+            previewFillRect.sizeDelta = new Vector2(innerWidth, 0f);
+
+            // The mask is as wide as the filled part. Its child keeps full width, so it is clipped, not squashed.
             var maskGo = new GameObject("Mask", typeof(RectTransform), typeof(RectMask2D));
             maskGo.transform.SetParent(back.transform, false);
             _hpMask = maskGo.GetComponent<RectTransform>();
@@ -383,7 +419,6 @@ namespace Items
             _hpMask.anchoredPosition = Vector2.zero;
             _hpMask.sizeDelta = new Vector2(innerWidth, 0f);
 
-            _hpTexture = MakeBarTexture();
             var fillGo = new GameObject("Fill", typeof(RectTransform), typeof(RawImage));
             fillGo.transform.SetParent(maskGo.transform, false);
             _hpFill = fillGo.GetComponent<RawImage>();

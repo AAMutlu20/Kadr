@@ -63,6 +63,16 @@ namespace Enemies
         private IDamageable _targetDamageable;
         private bool _ready;
 
+        // Hit zones: legs slow the enemy down, see TakeShot.
+        private const float LegHitWindow = 0.2f; // pellets of one shotgun blast count as ONE leg hit
+        private IDamageable _selfDamageable;
+        private Collider[] _colliders;
+        private int _legHits;
+        private float _lastLegHitTime = -10f;
+        private bool _sprintCancelled;
+        private float _requestedSpeed;
+        private float _writtenSpeed = -1f;
+
         public EnemyStats Stats => stats;
         public NavMeshAgent Agent { get; private set; }
         public Transform Target { get; private set; }
@@ -101,6 +111,7 @@ namespace Enemies
         {
             Agent = GetComponent<NavMeshAgent>();
             _health = GetComponent<Health>();
+            _colliders = GetComponentsInChildren<Collider>();
 
             if (!animator) animator = GetComponentInChildren<Animator>();
             if (!GetComponent<EnemyHurtVisual>()) gameObject.AddComponent<EnemyHurtVisual>();
@@ -170,6 +181,11 @@ namespace Enemies
             UpdateLocomotionAnimation();
         }
 
+        private void LateUpdate()
+        {
+            if (_ready && Agent.enabled) ApplyLegSlow();
+        }
+
         private void TryActivateOnNavMesh()
         {
             if (_health.IsDead || !NavMesh.SamplePosition(transform.position, out var hit, 4f, NavMesh.AllAreas))
@@ -195,6 +211,75 @@ namespace Enemies
 
             var normalized = Mathf.Clamp01(Agent.velocity.magnitude / stats.MaxSpeed);
             animator.SetFloat(SpeedHash, normalized, 0.1f, Time.deltaTime);
+        }
+
+        // Hit zones
+
+        /// <summary>
+        /// A bullet hit this enemy. Head and leg hits change the damage, leg hits also slow the enemy down.
+        /// Weapons call this instead of TakeDamage when the thing they hit is an enemy.
+        /// </summary>
+        public void TakeShot(RaycastHit hit, float damage, GameObject source)
+        {
+            if (_health.IsDead) return;
+
+            var zone = ZoneOf(hit);
+            var scale = zone == BodyZone.Head ? stats.headDamageScale : zone == BodyZone.Legs ? stats.legDamageScale : 1f;
+
+            if (_selfDamageable == null) _selfDamageable = GetComponent<IDamageable>();
+            _selfDamageable.TakeDamage(damage * scale, source);
+
+            if (zone == BodyZone.Legs && !_health.IsDead) RegisterLegHit();
+        }
+
+        public BodyZone ZoneOf(RaycastHit hit)
+        {
+            if (hit.collider && hit.collider.TryGetComponent<HitZone>(out var marked)) return marked.Zone;
+
+            // No marked colliders: judge by how high on the body the shot landed.
+            var found = false;
+            var bounds = new Bounds();
+            for (var i = 0; i < _colliders.Length; i++)
+            {
+                var c = _colliders[i];
+                if (!c || c.isTrigger) continue;
+
+                if (!found) { bounds = c.bounds; found = true; }
+                else bounds.Encapsulate(c.bounds);
+            }
+
+            if (!found || bounds.size.y < 0.01f) return BodyZone.Torso;
+
+            var share = (hit.point.y - bounds.min.y) / bounds.size.y;
+            if (share >= stats.headHeight) return BodyZone.Head;
+            return share <= stats.legHeight ? BodyZone.Legs : BodyZone.Torso;
+        }
+
+        private void RegisterLegHit()
+        {
+            if (Time.time - _lastLegHitTime < LegHitWindow) return;
+            _lastLegHitTime = Time.time;
+
+            _legHits++;
+            if (stats.legHitsToStopSprint > 0 && _legHits >= stats.legHitsToStopSprint) _sprintCancelled = true;
+        }
+
+        /// <summary>
+        /// Scales whatever speed the states ask for. The states set Agent.speed whenever they like; this notices the
+        /// change (their value differs from the one written here last) and applies the leg slow on top.
+        /// </summary>
+        private void ApplyLegSlow()
+        {
+            if (_legHits == 0) return;
+
+            if (!Mathf.Approximately(Agent.speed, _writtenSpeed)) _requestedSpeed = Agent.speed;
+
+            var speed = _requestedSpeed;
+            if (_sprintCancelled) speed = Mathf.Min(speed, stats.moveSpeed);
+
+            speed *= stats.legSlowScale;
+            Agent.speed = speed;
+            _writtenSpeed = speed;
         }
 
         // Camera flash effects (see EnemyStatus)
@@ -304,7 +389,7 @@ namespace Enemies
         /// </summary>
         public void BeginChase()
         {
-            Chase.SprintRequested = stats.CanSprint;
+            Chase.SprintRequested = stats.CanSprint && !_sprintCancelled;
             Fsm.ChangeState(Chase);
         }
 
