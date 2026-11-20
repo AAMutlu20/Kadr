@@ -17,7 +17,7 @@ MonoBehaviour:
   description: 'Leninade - 350 mililiters of communism! Feel the taste of Soviet
     Party! '
   icon: {fileID: 0}
-  inventoryModel: {fileID: 0}
+  inventoryModel: {fileID: 2182117622626827649, guid: cb7df9dc066702644977e9fa1ff26b79, type: 3}
   category: 0
   width: 1
   height: 3

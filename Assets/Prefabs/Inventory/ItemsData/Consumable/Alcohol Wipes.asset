@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Alcohol Wipes
   description: A medicinal alcohol wipe. Used to treat wounds as a first-aid disinfectant.
   icon: {fileID: 0}
-  inventoryModel: {fileID: 0}
+  inventoryModel: {fileID: 7247907942739619425, guid: 3e437a0db4458e24482ddf8b50c4b02b, type: 3}
   category: 0
   width: 1
   height: 1

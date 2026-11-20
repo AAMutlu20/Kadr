@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Fuel Can
   description: Despite being very rusty, it seems that it hasn't started to leak.
   icon: {fileID: 0}
-  inventoryModel: {fileID: 0}
+  inventoryModel: {fileID: 3611010567298120612, guid: 30f8070b11b43fe4884ff29c6db93ed1, type: 3}
   category: 1
   width: 2
   height: 3

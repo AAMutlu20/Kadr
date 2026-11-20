@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Items.ItemDefinition
   id: fuse
   displayName: Fuse
-  description: An industrial fuse. It's a bit worn out, but it should still hopefully
-    work.
+  description: An industrial fuse. It's a bit worn out, but it should still work.
+    Hopefully...
   icon: {fileID: 0}
-  inventoryModel: {fileID: 0}
+  inventoryModel: {fileID: 2721084560698328996, guid: 64fba6b840ad83845bcd07667c43d6c1, type: 3}
   category: 1
   width: 1
   height: 1
