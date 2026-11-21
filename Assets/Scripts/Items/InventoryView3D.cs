@@ -689,8 +689,10 @@ namespace Items
                     for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
 
                     // Uniform scale: fit the model inside the footprint along its length (X) and width (Z).
-                    var fit = Mathf.Min(targetW / Mathf.Max(bounds.size.x, 0.0001f),
-                        targetD / Mathf.Max(bounds.size.z, 0.0001f)) * 0.95f;
+                    var fit = def.KeepModelScale
+                        ? def.ModelScale
+                        : Mathf.Min(targetW / Mathf.Max(bounds.size.x, 0.0001f),
+                            targetD / Mathf.Max(bounds.size.z, 0.0001f)) * 0.95f;
 
                     model.transform.SetParent(pivot, false);
                     model.transform.localScale *= fit;

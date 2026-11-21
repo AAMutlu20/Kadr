@@ -17,7 +17,7 @@ MonoBehaviour:
   description: '"Ah, there is nothing better than some vodka during worktime! Right,
     comrade? - The Comissar"'
   icon: {fileID: 0}
-  inventoryModel: {fileID: 0}
+  inventoryModel: {fileID: 5159092635589455451, guid: 5e274def47d0c49478ecc548121e3a0f, type: 3}
   category: 0
   width: 1
   height: 3

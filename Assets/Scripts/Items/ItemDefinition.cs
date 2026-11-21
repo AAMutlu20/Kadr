@@ -20,6 +20,11 @@ namespace Items
         [Tooltip("Shown in the suitcase. Author it lying flat with its LONG side along X and its root at zero rotation. " +
                  "It is scaled automatically to fit the grid footprint below. Empty = a plain tinted block.")]
         [SerializeField] private GameObject inventoryModel;
+        [Tooltip("Tick for upright models (bottles): the model keeps the scale it has on its prefab instead of being " +
+                 "shrunk to fit the footprint. It is still centred on the footprint, standing on the surface.")]
+        [SerializeField] private bool keepModelScale;
+        [Tooltip("Only with Keep Model Scale: multiplies the prefab's scale. 1 = exactly as authored.")]
+        [SerializeField, Min(0.01f)] private float modelScale = 1f;
 
         [Header("Compartment")]
         [Tooltip("Consumable = bottom half of the case. Permanent = the lid (weapons, camera, torch, key items).")]
@@ -43,6 +48,8 @@ namespace Items
         public Sprite Icon => icon;
         public ItemCategory Category => category;
         public GameObject InventoryModel => inventoryModel;
+        public bool KeepModelScale => keepModelScale;
+        public float ModelScale => modelScale;
         public int Width => width;
         public int Height => height;
         public int MaxStack => maxStack;
