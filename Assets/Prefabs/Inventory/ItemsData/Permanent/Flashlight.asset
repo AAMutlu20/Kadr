@@ -17,7 +17,9 @@ MonoBehaviour:
   description: A highly customisable soviet flashlight, model FBK-1. Works on flat
     4,5 volt batteries.
   icon: {fileID: 0}
-  inventoryModel: {fileID: 0}
+  inventoryModel: {fileID: 1533833398086680146, guid: ba2b8178aaa0ac54c925c0d8b92380f5, type: 3}
+  keepModelScale: 0
+  modelScale: 1
   category: 1
   width: 1
   height: 2

@@ -18,6 +18,7 @@ namespace Weapons
         [SerializeField] private ParticleSystem muzzleFlash;
         [SerializeField] private MuzzleLight muzzleLight;
         [SerializeField] private GameObject impactPrefab;
+        [SerializeField] private GameObject incendiaryImpactPrefab;
         [SerializeField] private GameObject bulletHolePrefab;
 
         [Header("Aim pose")]
@@ -120,10 +121,10 @@ namespace Weapons
         public void OnReloadFinished() => ReloadFinished?.Invoke();
 
         /// <summary>Sparks and a bullet hole on world geometry.</summary>
-        public void SpawnImpact(Vector3 point, Vector3 normal)
+        public void SpawnImpact(Vector3 point, Vector3 normal, bool incendiary = false)
         {
-            if (impactPrefab)
-                Instantiate(impactPrefab, point + normal * 0.01f, Quaternion.LookRotation(normal));
+            var prefab = incendiary && incendiaryImpactPrefab ? incendiaryImpactPrefab : impactPrefab;
+            if (prefab) Instantiate(prefab, point + normal * 0.01f, Quaternion.LookRotation(normal));
 
             if (!bulletHolePrefab) return;
 

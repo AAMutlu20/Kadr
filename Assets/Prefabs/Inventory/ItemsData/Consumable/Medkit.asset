@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Items.ItemDefinition
   id: medkit
   displayName: Medkit
-  description: 
+  description: First-aid kit, containing everything you need to treat your wounds.
   icon: {fileID: 0}
   inventoryModel: {fileID: 1455252992540102203, guid: a8eee8e62f902024a9d8f567c9d0f3f9, type: 3}
   keepModelScale: 1

@@ -11,7 +11,7 @@ namespace Items
     /// If the grid is full the pickup stays; a partial fit lowers the count left on the ground.
     /// </summary>
     [RequireComponent(typeof(Collider))]
-    public class ItemPickup : MonoBehaviour
+    public class ItemPickup : MonoBehaviour, IPickupTarget
     {
         [SerializeField] private ItemDefinition item;
         [SerializeField, Min(1)] private int count = 1;

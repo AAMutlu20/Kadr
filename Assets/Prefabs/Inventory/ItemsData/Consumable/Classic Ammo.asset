@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Pistol Ammo
   description: Standard 9mm pistol ammo.
   icon: {fileID: 0}
-  inventoryModel: {fileID: 0}
+  inventoryModel: {fileID: 2368209876085357984, guid: 0a7fd3ec7fcf39242807f5671094c553, type: 3}
+  keepModelScale: 0
+  modelScale: 1
   category: 0
   width: 1
-  height: 1
+  height: 2
   maxStack: 30
   effect: {fileID: 0}

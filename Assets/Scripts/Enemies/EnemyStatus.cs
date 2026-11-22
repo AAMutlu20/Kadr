@@ -68,6 +68,20 @@ namespace Enemies
             _enemy.SetStunned(true);
         }
 
+        /// <summary>
+        /// The fire particle system used when Burn is called without its own prefab (incendiary bullets). The photo
+        /// camera sets it from its Burn Effect Prefab field, so the whole game uses one fire.
+        /// </summary>
+        public static GameObject SharedBurnEffect;
+        public static float SharedBurnScale = 1f;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetShared()
+        {
+            SharedBurnEffect = null;
+            SharedBurnScale = 1f;
+        }
+
         /// <summary>effectPrefab: your fire particle system (optional). It is placed in the middle of the enemy's body.</summary>
         public void Burn(float seconds, float damagePerSecond, GameObject source, GameObject effectPrefab = null, float effectScale = 1f)
         {
@@ -78,6 +92,12 @@ namespace Enemies
             _burnSource = source;
 
             if (_burning) return;
+
+            if (!effectPrefab)
+            {
+                effectPrefab = SharedBurnEffect;
+                effectScale = SharedBurnScale;
+            }
 
             _burning = true;
             _nextTick = Time.time + 1f;
@@ -205,7 +225,7 @@ namespace Enemies
                 _fireEffect.transform.localPosition = Vector3.up * 1.5f;
             }
 
-            _fireEffect.transform.rotation = Quaternion.identity; // particles rise, whichever way the enemy faces
+            _fireEffect.transform.rotation = prefab.transform.rotation; // keeps the prefab's own rotation (the menu's -90 on X), so flames rise whichever way the enemy faces
         }
 
         private void ClearAll()

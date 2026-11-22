@@ -16,6 +16,9 @@ GameObject:
   - component: {fileID: 3286582937994961830}
   - component: {fileID: 656181039967244489}
   - component: {fileID: 4912673371409220375}
+  - component: {fileID: 7590762003387391399}
+  - component: {fileID: 8539749774596365805}
+  - component: {fileID: 2240711186525314276}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -139,6 +142,7 @@ MonoBehaviour:
   mask:
     serializedVersion: 2
     m_Bits: 581
+  debugRay: 0
 --- !u!114 &656181039967244489
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -205,6 +209,77 @@ MonoBehaviour:
     xp: 20
   discoveryXp: 25
   discoveryCoverage: 0.5
+--- !u!114 &7590762003387391399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766028040625068675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43b379a98617ba54a904723d261f4ffb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Items.AmmoReserve
+  inventory: {fileID: 3888382706030324227}
+  normalAmmo: {fileID: 11400000, guid: 91d3dd0e392794942b0782514395c7b6, type: 2}
+  incendiaryAmmo: {fileID: 11400000, guid: c7c85ff596976af49b75663e1a9c0dc7, type: 2}
+  toggleKey: 38
+--- !u!114 &8539749774596365805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766028040625068675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb5c9fccabd682c4681a1558275d2c72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Items.Flashlight
+  inventory: {fileID: 3888382706030324227}
+  cam: {fileID: 8264003597976672933}
+  flashlightItem: {fileID: 11400000, guid: 79d51a061bd825a40b4ae01a5fe7a87c, type: 2}
+  batteryItem: {fileID: 11400000, guid: f1726b8de8821444e9693223da380bc7, type: 2}
+  toggleKey: 31
+  swapBatteryKey: 16
+  batterySeconds: 10
+  flickerBelow: 0.2
+  level: 0
+  low:
+    intensity: 4
+    range: 18
+    spotAngle: 50
+  medium:
+    intensity: 7
+    range: 28
+    spotAngle: 58
+  high:
+    intensity: 12
+    range: 40
+    spotAngle: 66
+  lightOffset: {x: 0.25, y: -0.15, z: 0.2}
+--- !u!114 &2240711186525314276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766028040625068675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ae99650cac884b42b1d282cd7df13db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.PlayerStamina
+  player: {fileID: 4621242746278700368}
+  maxStamina: 100
+  drainPerSecond: 20
+  regenPerSecond: 25
+  regenDelay: 1
+  recoverThreshold: 0.25
+  barSize: {x: 420, y: 10}
+  barBottomOffset: 70
+  fadeSpeed: 3
 --- !u!1 &1053865699183362461
 GameObject:
   m_ObjectHideFlags: 0
@@ -314,13 +389,14 @@ MonoBehaviour:
     rechargeInterval: 30
     depletedHoldTime: 2.1
   player: {fileID: 4621242746278700368}
+  stamina: {fileID: 0}
   aimMoveMultiplier: 0.6
   aimFovReduction: 10
   aimTransitionTime: 0.15
   busyMoveMultiplier: 0.2
   rackSlowTime: 1.2
   maxLowerWait: 3
-  debugLowerKey: 1
+  flashlight: {fileID: 0}
 --- !u!1 &3380238498438034452
 GameObject:
   m_ObjectHideFlags: 0
@@ -697,6 +773,8 @@ MonoBehaviour:
   strafeRoll: 1.2
   sprintPitch: 1.2
   sprintFovKick: 4
+  drunkWobbleDegrees: 1.4
+  drunkWobbleSpeed: 0.5
   traumaDegrees: 6
   traumaDecay: 1.6
   damageForFullTrauma: 40
@@ -1359,6 +1437,7 @@ MonoBehaviour:
   muzzleFlash: {fileID: 8343703015767976976}
   muzzleLight: {fileID: 687461914023559402}
   impactPrefab: {fileID: 5806340388042005287, guid: 8f3ae0e13c32f6a489cd87812082ebbe, type: 3}
+  incendiaryImpactPrefab: {fileID: 0}
   bulletHolePrefab: {fileID: 191955333447252114, guid: 577b342b10d583f47a70029d6a1e8b6f, type: 3}
   aimOffsetRoot: {fileID: 0}
   aimOffset: {x: 0, y: -0.05, z: -0.2}
@@ -2350,6 +2429,7 @@ MonoBehaviour:
   muzzleFlash: {fileID: 4968488404533611781}
   muzzleLight: {fileID: 1722970004069479393}
   impactPrefab: {fileID: 1852421796468300712, guid: 70b19f7794046e645a92aae120316919, type: 3}
+  incendiaryImpactPrefab: {fileID: 1852421796468300712, guid: e7f7a6ae79b614a43959aff5126e2ad3, type: 3}
   bulletHolePrefab: {fileID: 191955333447252114, guid: 577b342b10d583f47a70029d6a1e8b6f, type: 3}
   aimOffsetRoot: {fileID: 8905525963299824117}
   aimOffset: {x: 0, y: -0.2, z: 0}

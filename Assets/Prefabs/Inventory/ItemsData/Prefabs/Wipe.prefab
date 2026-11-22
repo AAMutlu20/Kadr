@@ -501,7 +501,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6672640425288051715}
   m_Layer: 0
-  m_Name: Wipe
+  m_Name: wipe
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

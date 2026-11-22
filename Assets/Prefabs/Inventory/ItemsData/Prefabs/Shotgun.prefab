@@ -402,7 +402,7 @@ GameObject:
   m_Component:
   - component: {fileID: 786273568061875380}
   m_Layer: 8
-  m_Name: Shotgun
+  m_Name: shotgun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

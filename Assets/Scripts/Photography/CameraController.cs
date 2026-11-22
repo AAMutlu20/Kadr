@@ -1,5 +1,6 @@
 using System;
 using Core;
+using Enemies;
 using Events;
 using Gameplay;
 using Items;
@@ -115,6 +116,10 @@ namespace Photography
 
             upgradeTree = CameraUpgradeTree.Resolve(upgradeTree);
             ApplyUpgrades();
+
+            // One fire for the whole game: incendiary bullets use the same particle system as the Fireshow flash.
+            EnemyStatus.SharedBurnEffect = burnEffectPrefab;
+            EnemyStatus.SharedBurnScale = burnEffectScale;
         }
 
         private void OnEnable()

@@ -43,6 +43,12 @@ namespace Weapons
         /// <summary>Decide if the animator should use the racking transition.</summary>
         protected virtual bool RacksAfterFire => false;
 
+        /// <summary>True while the magazine holds incendiary rounds: a hit sets the enemy on fire.</summary>
+        protected virtual bool IncendiaryRounds => false;
+
+        private const float IncendiaryBurnSeconds = 4f;
+        private const float IncendiaryDamagePerSecond = 5f;
+
         /// <summary>Spread used for the next shot. Weapons that can aim override this.</summary>
         protected virtual float CurrentSpread => Config.spreadAngle;
 
@@ -99,7 +105,9 @@ namespace Weapons
         private void Shoot()
         {
             var camTransform = Context.Cam.transform;
-            var spreadAngle = CurrentSpread;
+            // Drunk adds spread on top of the weapon's own, also while aiming.
+            var buffs = PlayerBuffs.Instance;
+            var spreadAngle = CurrentSpread + (buffs ? buffs.ExtraSpreadDegrees : 0f);
 
             for (var i = 0; i < Config.pellets; i++)
             {
@@ -117,7 +125,17 @@ namespace Weapons
                 {
                     // Enemies scale the damage by the body part that was hit (head, legs) and slow down on leg hits.
                     var enemy = hit.collider.GetComponentInParent<EnemyController>();
-                    if (enemy) enemy.TakeShot(hit, Config.damage, Context.Shooter);
+                    if (enemy)
+                    {
+                        enemy.TakeShot(hit, Config.damage, Context.Shooter);
+
+                        if (IncendiaryRounds && !enemy.IsDead)
+                        {
+                            var status = enemy.GetComponent<EnemyStatus>();
+                            if (!status) status = enemy.gameObject.AddComponent<EnemyStatus>();
+                            status.Burn(IncendiaryBurnSeconds, IncendiaryDamagePerSecond, Context.Shooter);
+                        }
+                    }
                     else target.TakeDamage(Config.damage, Context.Shooter);
 
                     // The target decides what being hit looks like (blood, sparks...), we only say where.
@@ -125,7 +143,7 @@ namespace Weapons
                     continue; // living target: no bullet hole
                 }
 
-                View.SpawnImpact(hit.point, hit.normal);
+                View.SpawnImpact(hit.point, hit.normal, IncendiaryRounds);
             }
         }
 

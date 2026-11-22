@@ -18,8 +18,10 @@ MonoBehaviour:
     comrade? - The Comissar"'
   icon: {fileID: 0}
   inventoryModel: {fileID: 5159092635589455451, guid: 5e274def47d0c49478ecc548121e3a0f, type: 3}
+  keepModelScale: 0
+  modelScale: 1
   category: 0
   width: 1
   height: 3
   maxStack: 3
-  effect: {fileID: 0}
+  effect: {fileID: 11400000, guid: e968e62ec2184d74bbaa2835f52e114c, type: 2}

@@ -2,6 +2,7 @@ using System.Collections;
 using Core;
 using Events;
 using Gameplay;
+using Items;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -45,6 +46,8 @@ namespace Weapons
         [Header("Aiming (hold right mouse)")]
         [Tooltip("Optional. While aiming the player can't sprint. Leave empty to skip that.")]
         [SerializeField] private PlayerController player;
+        [Tooltip("Optional. Out of stamina = no sprinting. Empty = found on the player automatically.")]
+        [SerializeField] private PlayerStamina stamina;
         [Tooltip("Walking speed while aiming, as a fraction of normal (0.6 = 60%). If you change it, set the Aim_Walk threshold in the Aim blend tree to 9 x this / 14.")]
         [SerializeField] private float aimMoveMultiplier = 0.6f;
         [Tooltip("Degrees the camera's field of view narrows while aiming.")]
@@ -61,8 +64,9 @@ namespace Weapons
         [Header("Switching")]
         [SerializeField] private float maxLowerWait = 3f; // for safety, incase the lowering never reports finished
 
-        [Header("Debug")]
-        [SerializeField] private bool debugLowerKey = true; // Q toggles lowered, TODO remove once the camera handles it
+        [Header("Flashlight")]
+        [Tooltip("While the flashlight is on the weapon is lowered and can't be used. Empty = found automatically.")]
+        [SerializeField] private Flashlight flashlight;
 
         private IWeaponStrategy[] _weapons;
         private int _current;
@@ -71,16 +75,21 @@ namespace Weapons
         private float _baseFov;
         private float _aimBlend; // 0 = hip, 1 = fully aimed
         private float _rackUntil; // Time.time until which a rack keeps the player slowed
+        private bool _loweredByFlashlight;
 
         public IWeaponStrategy Current => _weapons[_current];
         public bool IsSwitching => _switching;
         public bool InputEnabled { get; set; } = true;
+
+        private bool LightOn => flashlight && flashlight.IsOn;
 
         private void Awake()
         {
             if (!cam) cam = Camera.main;
             if (!cam) return;
             _baseFov = cam.fieldOfView;
+            if (!stamina && player) stamina = player.GetComponent<PlayerStamina>();
+            if (!flashlight) flashlight = FindAnyObjectByType<Flashlight>();
 
             var context = new WeaponContext(cam, hitMask, transform.root.gameObject);
 
@@ -121,6 +130,7 @@ namespace Weapons
 
             // Before the early returns below, so aiming always drops while switching.
             UpdateAiming();
+            UpdateFlashlightLowering();
 
             if (_switching) return;
 
@@ -161,12 +171,8 @@ namespace Weapons
                 return;
             }
 
-            if (debugLowerKey && kb.qKey.wasPressedThisFrame)
-            {
-                SetLowered(!Current.View.IsLowered);
-            }
-
-            if (Current.View.IsLowered) return;
+            // Flashlight in hand: no shooting or reloading (Q is the flashlight key now, so the old debug lower key is gone).
+            if (LightOn || Current.View.IsLowered) return;
 
             if (mouse.leftButton.wasPressedThisFrame)
             {
@@ -190,6 +196,7 @@ namespace Weapons
             var mouse = Mouse.current;
             var wantsAim = InputEnabled && mouse != null && mouse.rightButton.isPressed
                            && !_switching
+                           && !LightOn
                            && Current.CanAim
                            && !Current.IsBusy
                            && !Current.View.IsLowered;
@@ -203,13 +210,34 @@ namespace Weapons
             {
                 // Reloading and racking: no sprinting and a heavy slow-down. Aiming has its own slow-down.
                 var busy = Current.IsBusy || Time.time < _rackUntil;
-                player.CanSprint = !Current.IsAiming && !busy;
+                player.CanSprint = !Current.IsAiming && !busy && (!stamina || stamina.CanSprint);
                 player.WeaponSpeedMultiplier = busy ? busyMoveMultiplier : Current.IsAiming ? aimMoveMultiplier : 1f;
             }
 
             var target = Current.IsAiming ? 1f : 0f;
             _aimBlend = Mathf.MoveTowards(_aimBlend, target, Time.deltaTime / aimTransitionTime);
             cam.fieldOfView = Mathf.Lerp(_baseFov, _baseFov - aimFovReduction, Mathf.SmoothStep(0f, 1f, _aimBlend));
+        }
+
+        /// <summary>
+        /// The flashlight takes the hand: lower the weapon when it turns on, raise it when it turns off.
+        /// A reload (or a switch) in progress finishes first, then the weapon goes down.
+        /// </summary>
+        private void UpdateFlashlightLowering()
+        {
+            if (LightOn)
+            {
+                if (_loweredByFlashlight || _switching || Current.IsBusy) return;
+                if (!Current.View.IsLowered) Current.View.SetLowered(true);
+                _loweredByFlashlight = true;
+            }
+            else if (_loweredByFlashlight)
+            {
+                if (_switching) return;
+                _loweredByFlashlight = false;
+                Current.View.SetLowered(false);
+                Current.Raised();
+            }
         }
 
         /// <summary>Called by the camera system to lower or raise the current weapon.</summary>
@@ -224,7 +252,7 @@ namespace Weapons
 
         public bool TrySelect(int slot)
         {
-            if (_switching || slot == _current) return false;
+            if (_switching || slot == _current || LightOn) return false;
             if (slot < 0 || slot >= _weapons.Length) return false;
             if (!_weapons[slot].CanSelect) return false; // TODO an empty "click" sound to go here
 

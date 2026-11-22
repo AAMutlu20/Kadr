@@ -88,6 +88,12 @@ namespace Gameplay
         [Tooltip("Degrees the field of view widens while sprinting.")]
         [SerializeField] private float sprintFovKick = 3f;
 
+        [Header("Drunk (alcohol)")]
+        [Tooltip("Extra wander in degrees at full drunkenness. It is added on top of the normal sway.")]
+        [SerializeField] private float drunkWobbleDegrees = 1.4f;
+        [Tooltip("How fast the drunk wobble drifts, in cycles per second.")]
+        [SerializeField] private float drunkWobbleSpeed = 0.5f;
+
         [Header("Trauma (hits and photos)")]
         [Tooltip("Largest shake angle, in degrees, at full trauma.")]
         [SerializeField] private float traumaDegrees = 6f;
@@ -106,6 +112,8 @@ namespace Gameplay
         private float _sprint;           // 0..1 smoothed share of the way to sprint speed
         private float _scale = 1f;
         private float _phase;
+        private float _swayTime;
+        private float _drunkTime;
         private float _trauma;
         private float _moveVel, _sprintVel, _scaleVel;
         private Vector3 _lateralVel;
@@ -220,8 +228,24 @@ namespace Gameplay
             var euler = new Vector3(-Mathf.Abs(bounce) * bob.pitch * _move, 0f, -sin * bob.roll * _move);
 
             // Handheld sway: smooth noise, different on every axis.
-            //euler += new Vector3(Noise(t, sway.speed, 1f), Noise(t, sway.speed, 2f), Noise(t, sway.speed, 3f)) * sway.degrees;
-            // nvm it didn't work how I wanted it to, leaving it commented until I decide what to do about this. TODO: decide what to do about this.
+            // The noise position is ACCUMULATED, so changing the speed only makes it wander faster or slower. Sampling at
+            // time * speed would jump to an unrelated value whenever the speed changes (every start and stop).
+            _swayTime += dt * sway.speed;
+            if (_swayTime > 10000f) _swayTime -= 10000f;
+            euler += new Vector3(Noise(_swayTime, 1f, 1f), Noise(_swayTime, 1f, 2f), Noise(_swayTime, 1f, 3f)) * sway.degrees;
+
+            // Drunk: a slow, large wander on top of the sway, with a lazy roll and a little drift of the position.
+            // Accumulated like the sway, so the speed never makes it jump. Alcohol sets PlayerBuffs.Drunk (0..1).
+            var buffs = PlayerBuffs.Instance;
+            if (buffs && buffs.IsDrunk)
+            {
+                _drunkTime += dt * drunkWobbleSpeed;
+                if (_drunkTime > 10000f) _drunkTime -= 10000f;
+
+                var drunk = buffs.Drunk;
+                euler += new Vector3(Noise(_drunkTime, 1f, 11f) * 0.7f, Noise(_drunkTime, 1f, 12f) * 0.6f, Noise(_drunkTime, 1f, 13f)) * (drunkWobbleDegrees * drunk);
+                position += new Vector3(Noise(_drunkTime, 1f, 14f), Noise(_drunkTime, 1f, 15f) * 0.5f, 0f) * (0.12f * drunk);
+            }
 
             // Lean: into a strafe, tipped forward in a sprint.
             euler.z -= Mathf.Clamp(_localVelocity.x / walkSpeed, -1.5f, 1.5f) * strafeRoll;

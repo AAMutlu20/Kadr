@@ -17,9 +17,11 @@ MonoBehaviour:
   description: An experimental combination of powdered napalm and gunpowder make
     this ammo higly flammable on detonation.
   icon: {fileID: 0}
-  inventoryModel: {fileID: 0}
+  inventoryModel: {fileID: 955704263053450936, guid: cc8e6a83d8a89ad4fa17b92985b9a821, type: 3}
+  keepModelScale: 0
+  modelScale: 1
   category: 0
   width: 1
-  height: 1
+  height: 2
   maxStack: 15
   effect: {fileID: 0}
