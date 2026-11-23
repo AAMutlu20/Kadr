@@ -15,7 +15,7 @@ MonoBehaviour:
   id: battery
   displayName: Batteries
   description: Standard 4,5 volt batteries, used to charge many appliances.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 6db53e37ec57e9747b6e8f490aae2eee, type: 3}
   inventoryModel: {fileID: 274100483107826972, guid: 030ed825a02e2884a838ae31dc3810a1, type: 3}
   keepModelScale: 0
   modelScale: 1

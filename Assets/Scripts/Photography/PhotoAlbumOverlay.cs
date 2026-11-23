@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Items;
+using Menus;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -95,7 +96,7 @@ namespace Photography
             }
 
             _album = photoCamera.Album;
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = KadrFont.Body;
             Build();
 
             _album.Changed += OnAlbumChanged;

@@ -3,6 +3,7 @@ using Core;
 using Events;
 using Gameplay;
 using Photography;
+using Menus;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -106,7 +107,7 @@ namespace Items
 
         private void Start()
         {
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = KadrFont.Body;
 
             _xpProgress = PlayerXp.Progress;
             _xpNeeded = Mathf.Max(1, PlayerXp.Needed);

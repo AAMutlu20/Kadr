@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Gameplay;
+using Menus;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,7 +11,7 @@ namespace Items
     ///
     /// Controls while open:
     ///   Left click   pick up the item under the cursor (it follows the mouse), click again to put it down.
-    ///                Dropping onto a stack of the same item merges them. On the album it opens the upgrades, on the photos the album window.
+    ///                Dropping onto a stack of the same item merges them. On the album it opens the upgrades.
     ///   R            rotate the held item (the ghost is green when it fits, red when it does not)
     ///   Right click  use the item under the cursor, or put back the item you are holding
     ///   Esc / Tab    close
@@ -93,7 +94,7 @@ namespace Items
         private InventoryHotspot _hotspot;
 
         /// <summary>
-        /// While true (the photo album window is open) the suitcase ignores the mouse and Esc. Tab still closes it.
+        /// While true (the photo album overlay is open) the suitcase ignores the mouse and Esc. Tab still closes it.
         /// </summary>
         public bool Blocked { get; set; }
 
@@ -146,7 +147,7 @@ namespace Items
 
             _player = inventory.GetComponent<PlayerController>();
             _health = inventory.GetComponent<Health>();
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = KadrFont.Body;
 
             BuildGhost();
 
@@ -182,7 +183,7 @@ namespace Items
                 return;
             }
 
-            if (kb.tabKey.wasPressedThisFrame)
+            if (KadrControls.Pressed(GameAction.Inventory))
             {
                 if (_open) Close();
                 else Open();
@@ -219,8 +220,8 @@ namespace Items
 
             UpdateHotspot(ray);
 
-            // R: rotate the held item. A square item has no point in turning.
-            if (kb.rKey.wasPressedThisFrame && _held != null && _held.Definition.Width != _held.Definition.Height)
+            // Rotate key: turn the held item. A square item has no point in turning.
+            if (KadrControls.Pressed(GameAction.RotateItem) && _held != null && _held.Definition.Width != _held.Definition.Height)
             {
                 _heldRotated = !_heldRotated;
                 ApplyLabelAndCount(_views[_held]);
@@ -331,7 +332,6 @@ namespace Items
 
             if (_hotspot) _hotspot.SetHover(false);
             _hotspot = null;
-            Blocked = false;
 
             rig.SetOpen(false, closeDelay);
             if (hud) hud.SetVisible(false);
@@ -689,10 +689,8 @@ namespace Items
                     for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
 
                     // Uniform scale: fit the model inside the footprint along its length (X) and width (Z).
-                    var fit = def.KeepModelScale
-                        ? def.ModelScale
-                        : Mathf.Min(targetW / Mathf.Max(bounds.size.x, 0.0001f),
-                            targetD / Mathf.Max(bounds.size.z, 0.0001f)) * 0.95f;
+                    var fit = Mathf.Min(targetW / Mathf.Max(bounds.size.x, 0.0001f),
+                        targetD / Mathf.Max(bounds.size.z, 0.0001f)) * 0.95f;
 
                     model.transform.SetParent(pivot, false);
                     model.transform.localScale *= fit;

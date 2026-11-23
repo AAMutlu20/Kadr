@@ -15,8 +15,10 @@ MonoBehaviour:
   id: bandage
   displayName: Bint
   description: 'Got hurt? This studry "Bint" will patch you up! '
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 11722be77029fde469108bc0603515ca, type: 3}
   inventoryModel: {fileID: 5382629319037867292, guid: a13fe2140fd62dd4bbfa5148faa7d69e, type: 3}
+  keepModelScale: 0
+  modelScale: 1
   category: 0
   width: 2
   height: 1

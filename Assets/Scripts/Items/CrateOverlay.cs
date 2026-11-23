@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Gameplay;
+using Menus;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -77,7 +78,7 @@ namespace Items
 
         private void Awake()
         {
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = KadrFont.Body;
             Build();
             _root.SetActive(false);
         }
@@ -119,6 +120,7 @@ namespace Items
 
             _root.SetActive(true);
             Rebuild();
+            _crate.OnOpened();
         }
 
         private void Close()
@@ -167,7 +169,7 @@ namespace Items
 
             // The E that opened the window is still "pressed this frame" on the first frame.
             if (Time.frameCount != _openedFrame &&
-                (kb.escapeKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame ||
+                (kb.escapeKey.wasPressedThisFrame || KadrControls.Pressed(GameAction.Interact) || KadrControls.Pressed(GameAction.Inventory) ||
                  mouse.rightButton.wasPressedThisFrame))
             {
                 Close();

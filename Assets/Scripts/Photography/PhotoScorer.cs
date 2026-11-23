@@ -65,7 +65,7 @@ namespace Photography
                 var open = 0;
                 foreach (var point in Points)
                 {
-                    if (!Physics.Linecast(origin, point, blockers, QueryTriggerInteraction.Ignore)) open++;
+                    if (IsOpen(origin, point, blockers, subject)) open++;
                 }
 
                 var coverage = inFrame * open / Points.Count;
@@ -93,6 +93,27 @@ namespace Photography
 
             var extra = Mathf.Min(settings.groupBonusMax, settings.groupBonusPerExtra * Mathf.Max(0, into.Subjects.Count - 1));
             into.Score = Mathf.Round(total * (1f + extra));
+        }
+
+        private static readonly RaycastHit[] Hits = new RaycastHit[16];
+
+        /// <summary>
+        /// True when nothing but the subject itself is between the camera and the point. The subject's own colliders must
+        /// not count as a wall: the points sit inside its body, so a plain Linecast would hit the body and call it hidden.
+        /// </summary>
+        private static bool IsOpen(Vector3 origin, Vector3 point, LayerMask blockers, Photographable subject)
+        {
+            var delta = point - origin;
+            var distance = delta.magnitude;
+            if (distance < 0.01f) return true;
+
+            var count = Physics.RaycastNonAlloc(origin, delta / distance, Hits, distance, blockers, QueryTriggerInteraction.Ignore);
+            for (var i = 0; i < count; i++)
+            {
+                if (Hits[i].collider.GetComponentInParent<Photographable>() != subject) return false;
+            }
+
+            return true;
         }
 
         /// <summary>

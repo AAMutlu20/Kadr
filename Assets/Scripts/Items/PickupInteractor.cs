@@ -63,8 +63,7 @@ namespace Items
                 Publish(new InteractPromptEvent(prompt != null, prompt ?? ""));
             }
 
-            var kb = Keyboard.current;
-            if (target != null && kb != null && kb.eKey.wasPressedThisFrame && !target.TryCollect(inventory))
+            if (target != null && KadrControls.Pressed(GameAction.Interact) && !target.TryCollect(inventory))
             {
                 Publish(new NoticeEvent("Inventory full"));
             }

@@ -103,6 +103,8 @@ namespace Weapons
 
         private void Start()
         {
+            PlayerPulse.Of(player ? player.gameObject : gameObject); // the heart rate shakes the pistol's aim
+
             // Every weapon starts full each run. Refill also publishes AmmoChangedEvent for the HUD.
             foreach (var weapon in _weapons)
             {
@@ -174,7 +176,7 @@ namespace Weapons
             // Flashlight in hand: no shooting or reloading (Q is the flashlight key now, so the old debug lower key is gone).
             if (LightOn || Current.View.IsLowered) return;
 
-            if (mouse.leftButton.wasPressedThisFrame)
+            if (KadrControls.Pressed(GameAction.Fire))
             {
                 var ammoBefore = Current.Ammo;
                 Current.PrimaryFire();
@@ -182,7 +184,7 @@ namespace Weapons
                 // Weapons other than the default one rack after a shot. Only a shot that was really fired counts.
                 if (_current != DefaultSlot && Current.Ammo < ammoBefore) _rackUntil = Time.time + rackSlowTime;
             }
-            if (kb.rKey.wasPressedThisFrame) Current.Reload();
+            if (KadrControls.Pressed(GameAction.Reload)) Current.Reload();
         }
 
         /// <summary>
@@ -193,8 +195,7 @@ namespace Weapons
         /// </summary>
         private void UpdateAiming()
         {
-            var mouse = Mouse.current;
-            var wantsAim = InputEnabled && mouse != null && mouse.rightButton.isPressed
+            var wantsAim = InputEnabled && KadrControls.Held(GameAction.Aim)
                            && !_switching
                            && !LightOn
                            && Current.CanAim

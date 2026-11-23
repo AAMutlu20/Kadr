@@ -156,7 +156,7 @@ namespace Photography
                 return;
             }
 
-            var held = kb.fKey.isPressed;
+            var held = KadrControls.Held(GameAction.RaiseCamera);
 
             switch (_state)
             {
@@ -172,7 +172,7 @@ namespace Photography
 
                 case State.Ready:
                     if (!held) { Lower(); break; }
-                    if (mouse.leftButton.wasPressedThisFrame) StartWindup();
+                    if (KadrControls.Pressed(GameAction.Fire)) StartWindup();
                     break;
 
                 case State.Windup:

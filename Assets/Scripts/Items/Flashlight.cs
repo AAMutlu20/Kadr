@@ -1,5 +1,6 @@
 using Core;
 using Events;
+using Gameplay;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -7,8 +8,8 @@ using UnityEngine.UI;
 namespace Items
 {
     /// <summary>
-    /// The flashlight. On the Player, next to the Inventory. It builds its own spot light on the camera and a small
-    /// battery bar on screen, so nothing else needs setting up.
+    /// The flashlight. On the Player, next to the Inventory. It builds its own spot light on the camera, so nothing
+    /// else needs setting up. The battery is shown by KadrHud, through FlashlightChangedEvent.
     ///
     ///   Toggle key (Q)     on / off. With a dead battery it swaps in a new one from the suitcase first.
     ///   Swap key (B)       puts in a fresh battery now (uses one battery, charge back to full).
@@ -39,10 +40,6 @@ namespace Items
         [Tooltip("The battery item that the swap key and an empty battery take from the suitcase.")]
         [SerializeField] private ItemDefinition batteryItem;
 
-        [Header("Keys")]
-        [SerializeField] private Key toggleKey = Key.Q;
-        [SerializeField] private Key swapBatteryKey = Key.B;
-
         [Header("Battery")]
         [Tooltip("Seconds of light from a full battery. 10 at the start, 15 and 20 after the Comisar's upgrades.")]
         [SerializeField, Min(1f)] private float batterySeconds = 10f;
@@ -62,7 +59,6 @@ namespace Items
         private bool _lastPublishedOn;
         private bool _lastPublishedOwned;
         private EventBus _bus;
-        private FlashlightBar _bar;
 
         public float Charge01 => _charge;
         public bool IsOn => _on;
@@ -106,7 +102,6 @@ namespace Items
                 Debug.LogWarning("[Flashlight] No camera found. Assign one in the inspector.", this);
             }
 
-            _bar = FlashlightBar.Create(transform);
         }
 
         private void OnEnable()
@@ -130,12 +125,11 @@ namespace Items
             if (!owned && _on) SetOn(false);
 
             var paused = Time.timeScale == 0f || (inventory && inventory.IsOpen);
-            var kb = Keyboard.current;
 
-            if (!paused && kb != null && owned)
+            if (!paused && owned)
             {
-                if (kb[toggleKey].wasPressedThisFrame) Toggle();
-                if (kb[swapBatteryKey].wasPressedThisFrame) SwapBattery();
+                if (KadrControls.Pressed(GameAction.Flashlight)) Toggle();
+                if (KadrControls.Pressed(GameAction.NewBattery)) SwapBattery();
             }
 
             if (_on && !paused)
@@ -143,8 +137,12 @@ namespace Items
                 _charge = Mathf.Max(0f, _charge - Time.deltaTime / batterySeconds);
                 if (_charge <= 0f)
                 {
-                    SetOn(false);
-                    Notice("The flashlight battery is dead");
+                    // A spare battery goes in by itself, so the light never goes out (and the weapon stays up) while there is one.
+                    if (!SwapBattery(true))
+                    {
+                        SetOn(false);
+                        Notice("The flashlight battery is dead");
+                    }
                 }
             }
 
@@ -165,25 +163,25 @@ namespace Items
             SetOn(true);
         }
 
-        /// <summary>Uses one battery from the suitcase. False (with a message) if there is none or the light is already full.</summary>
-        private bool SwapBattery()
+        /// <summary>Uses one battery from the suitcase. False (with a message, unless silent) if there is none or the light is already full.</summary>
+        private bool SwapBattery(bool silent = false)
         {
             if (_charge > 0.999f)
             {
-                Notice("The battery is still full");
+                if (!silent) Notice("The battery is still full");
                 return false;
             }
 
             if (!batteryItem || !inventory)
             {
-                Notice("No battery item assigned");
+                if (!silent) Notice("No battery item assigned");
                 return false;
             }
 
             var stack = inventory.GridFor(batteryItem.Category).Find(batteryItem);
             if (stack == null)
             {
-                Notice("No batteries left");
+                if (!silent) Notice("No batteries left");
                 return false;
             }
 
@@ -246,102 +244,12 @@ namespace Items
             _lastPublishedOwned = owned;
 
             var evt = new FlashlightChangedEvent(_charge, _on, owned);
-            if (_bar) _bar.Show(evt);
             if (_bus != null || GameServices.TryGet(out _bus)) _bus.Publish(evt);
         }
 
         private void Notice(string message)
         {
             if (_bus != null || GameServices.TryGet(out _bus)) _bus.Publish(new NoticeEvent(message));
-        }
-    }
-
-    /// <summary>The little battery bar in the bottom left corner: ten segments, red when low, dim when the light is off.</summary>
-    public class FlashlightBar : MonoBehaviour
-    {
-        private const int Segments = 10;
-
-        private readonly Image[] _cells = new Image[Segments];
-        private GameObject _root;
-        private Text _label;
-
-        public static FlashlightBar Create(Transform parent)
-        {
-            var go = new GameObject("FlashlightBar");
-            go.transform.SetParent(parent, false);
-
-            var bar = go.AddComponent<FlashlightBar>();
-            bar.Build();
-            return bar;
-        }
-
-        private void Build()
-        {
-            var canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler));
-            canvasGo.transform.SetParent(transform, false);
-
-            var canvas = canvasGo.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 15;
-
-            var scaler = canvasGo.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0.5f;
-
-            _root = new GameObject("Root", typeof(RectTransform));
-            _root.transform.SetParent(canvasGo.transform, false);
-            var rect = _root.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = Vector2.zero;
-            rect.pivot = Vector2.zero;
-            rect.anchoredPosition = new Vector2(40f, 40f);
-            rect.sizeDelta = new Vector2(250f, 50f);
-
-            var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
-            labelGo.transform.SetParent(_root.transform, false);
-            _label = labelGo.GetComponent<Text>();
-            _label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            _label.fontSize = 20;
-            _label.fontStyle = FontStyle.Bold;
-            _label.text = "BATTERY";
-            _label.alignment = TextAnchor.UpperLeft;
-            _label.raycastTarget = false;
-            var labelRect = _label.rectTransform;
-            labelRect.anchorMin = new Vector2(0f, 1f);
-            labelRect.anchorMax = new Vector2(1f, 1f);
-            labelRect.pivot = new Vector2(0f, 1f);
-            labelRect.anchoredPosition = Vector2.zero;
-            labelRect.sizeDelta = new Vector2(0f, 26f);
-
-            for (var i = 0; i < Segments; i++)
-            {
-                var cellGo = new GameObject("Cell" + i, typeof(RectTransform), typeof(Image));
-                cellGo.transform.SetParent(_root.transform, false);
-                var image = cellGo.GetComponent<Image>();
-                image.raycastTarget = false;
-                var cellRect = image.rectTransform;
-                cellRect.anchorMin = cellRect.anchorMax = Vector2.zero;
-                cellRect.pivot = Vector2.zero;
-                cellRect.sizeDelta = new Vector2(21f, 16f);
-                cellRect.anchoredPosition = new Vector2(i * 24f, 0f);
-                _cells[i] = image;
-            }
-
-            _root.SetActive(false);
-        }
-
-        public void Show(FlashlightChangedEvent e)
-        {
-            _root.SetActive(e.Owned);
-            if (!e.Owned) return;
-
-            var low = e.Charge <= 0.3f;
-            var on = new Color(low ? 0.9f : 0.55f, low ? 0.25f : 0.85f, low ? 0.2f : 0.45f, e.IsOn ? 1f : 0.55f);
-            var off = new Color(0.12f, 0.12f, 0.12f, 0.8f);
-            var filled = Mathf.CeilToInt(e.Charge * Segments - 0.001f);
-
-            for (var i = 0; i < Segments; i++) _cells[i].color = i < filled ? on : off;
-            _label.color = new Color(1f, 1f, 1f, e.IsOn ? 1f : 0.6f);
         }
     }
 }

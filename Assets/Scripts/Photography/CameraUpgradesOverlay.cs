@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Core;
 using Events;
 using Items;
+using Menus;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -89,7 +90,7 @@ namespace Photography
 
             _tree = CameraUpgradeTree.Resolve(upgradeTree);
             _progress = CameraProgress.Current;
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = KadrFont.Body;
             Build();
 
             _progress.Changed += MarkDirty;

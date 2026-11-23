@@ -163,12 +163,12 @@ MonoBehaviour:
   contents: []
   lootTable:
   - item: {fileID: 11400000, guid: 91d3dd0e392794942b0782514395c7b6, type: 2}
-    minCount: 1
-    maxCount: 1
+    minCount: 5
+    maxCount: 10
     chance: 1
   - item: {fileID: 11400000, guid: c7c85ff596976af49b75663e1a9c0dc7, type: 2}
     minCount: 1
-    maxCount: 1
+    maxCount: 5
     chance: 0.05
   maxDifferentItems: 1
   neverEmpty: 1

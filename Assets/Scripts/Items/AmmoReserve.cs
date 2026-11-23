@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Core;
 using Events;
+using Gameplay;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Weapons;
@@ -29,10 +30,6 @@ namespace Items
         [SerializeField] private ItemDefinition normalAmmo;
         [SerializeField] private ItemDefinition incendiaryAmmo;
 
-        [Header("Keys")]
-        [Tooltip("Switches between normal and incendiary rounds for the next reload.")]
-        [SerializeField] private Key toggleKey = Key.X;
-
         private EventBus _bus;
 
         /// <summary>The first AmmoReserve in the scene. The weapons use this, so they need no reference.</summary>
@@ -49,8 +46,6 @@ namespace Items
             if (!inventory) inventory = GetComponentInParent<Inventory>();
             if (!inventory) inventory = GetComponent<Inventory>();
             Instance = this;
-
-            PistolAmmoPanel.Create(transform, this, inventory);
         }
 
         private void OnDestroy()
@@ -60,10 +55,10 @@ namespace Items
 
         private void Update()
         {
-            var kb = Keyboard.current;
-            if (kb == null || Time.timeScale == 0f || (inventory && inventory.IsOpen)) return;
+            if (Time.timeScale == 0f || (inventory && inventory.IsOpen)) return;
 
-            if (kb[toggleKey].wasPressedThisFrame) ToggleSelected();
+            // Switches between normal and incendiary rounds for the next reload.
+            if (KadrControls.Pressed(GameAction.SwitchAmmo)) ToggleSelected();
         }
 
         public ItemDefinition Item(AmmoKind kind) => kind == AmmoKind.Incendiary ? incendiaryAmmo : normalAmmo;

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Core;
 using Events;
+using Gameplay;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -63,10 +64,9 @@ namespace Items
 
         private void Update()
         {
-            var kb = Keyboard.current;
-            if (kb == null || IsOpen || !quickHealItem) return;
+            if (IsOpen || !quickHealItem) return;
 
-            if (kb.hKey.wasPressedThisFrame)
+            if (KadrControls.Pressed(GameAction.QuickHeal))
             {
                 var stack = GridFor(quickHealItem.Category).Find(quickHealItem);
                 if (stack != null) TryUse(stack);

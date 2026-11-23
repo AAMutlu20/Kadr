@@ -1,5 +1,6 @@
 using Core;
 using Events;
+using Menus;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -71,7 +72,7 @@ namespace Photography
             _flash = flashRect.GetComponent<Image>();
             _flash.raycastTarget = false;
 
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var font = KadrFont.Body;
             var popupGo = new GameObject("Popup", typeof(RectTransform), typeof(Text), typeof(Outline));
             popupGo.transform.SetParent(canvasGo.transform, false);
             var popupRect = popupGo.GetComponent<RectTransform>();

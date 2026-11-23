@@ -15,7 +15,7 @@ MonoBehaviour:
   id: medkit
   displayName: Medkit
   description: First-aid kit, containing everything you need to treat your wounds.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 72a8eafdbcf464249889fca1979a837b, type: 3}
   inventoryModel: {fileID: 1455252992540102203, guid: a8eee8e62f902024a9d8f567c9d0f3f9, type: 3}
   keepModelScale: 1
   modelScale: 1

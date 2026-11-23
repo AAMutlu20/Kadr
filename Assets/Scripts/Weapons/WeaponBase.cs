@@ -1,3 +1,4 @@
+using Bosses;
 using Core;
 using Enemies;
 using Events;
@@ -29,6 +30,23 @@ namespace Weapons
         public string Name => Config.name;
         public int Ammo { get; private set; }
         public int MaxAmmo => Config.magSize;
+        /// <summary>1 for a pistol, more for a shotgun. The HUD picks the crosshair from it.</summary>
+        public int Pellets => Config.pellets;
+        /// <summary>Spread of the next shot in degrees, drunk included. The crosshair is drawn from it.</summary>
+        public float SpreadDegrees
+        {
+            get
+            {
+                var buffs = PlayerBuffs.Instance;
+                var pulse = PlayerPulse.Instance;
+                return CurrentSpread
+                       + (buffs ? buffs.ExtraSpreadDegrees : 0f)
+                       + (pulse && PulseAffectsSpread ? pulse.ExtraSpreadDegrees(IsAiming) : 0f);
+            }
+        }
+
+        /// <summary>A racing heart shakes the aim. On for single-bullet weapons (the pistol), off for the shotgun.</summary>
+        protected virtual bool PulseAffectsSpread => Config.pellets <= 1;
 
         // Defaults describe a prop weapon. The strategies then override only what makes a select weapon different.
         public virtual bool CanSelect => true;
@@ -105,9 +123,8 @@ namespace Weapons
         private void Shoot()
         {
             var camTransform = Context.Cam.transform;
-            // Drunk adds spread on top of the weapon's own, also while aiming.
-            var buffs = PlayerBuffs.Instance;
-            var spreadAngle = CurrentSpread + (buffs ? buffs.ExtraSpreadDegrees : 0f);
+            // Drunk and a racing pulse add spread on top of the weapon's own, also while aiming.
+            var spreadAngle = SpreadDegrees;
 
             for (var i = 0; i < Config.pellets; i++)
             {
@@ -136,7 +153,13 @@ namespace Weapons
                             status.Burn(IncendiaryBurnSeconds, IncendiaryDamagePerSecond, Context.Shooter);
                         }
                     }
-                    else target.TakeDamage(Config.damage, Context.Shooter);
+                    else
+                    {
+                        target.TakeDamage(Config.damage, Context.Shooter);
+
+                        // The boss is not an EnemyController, so he gets his own (show-only) fire.
+                        if (IncendiaryRounds) hit.collider.GetComponentInParent<BossController>()?.Ignite(IncendiaryBurnSeconds);
+                    }
 
                     // The target decides what being hit looks like (blood, sparks...), we only say where.
                     hit.collider.GetComponentInParent<IHitReceiver>()?.OnHit(hit.point, hit.normal);

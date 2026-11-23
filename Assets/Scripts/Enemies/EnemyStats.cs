@@ -49,6 +49,13 @@ namespace Enemies
         public float attackHitDelay = 0.6f;
         [Tooltip("Tick when the attack clip has a DealDamage Animation Event. The hit then lands on that frame and the delay above is ignored.")]
         public bool hitFromAnimationEvent;
+        [Tooltip("Flat distance at which the hit still lands, checked when it lands. 0 = Attack Range x 1.25 (as before). " +
+                 "Make it bigger than Attack Range, so an enemy that starts a swing still hits a player who walks back a step.")]
+        public float attackReach;
+        [Tooltip("The enemy steps this many units towards the player during the swing, so walking away does not dodge it. 0 = no lunge.")]
+        public float lungeDistance;
+        [Tooltip("Seconds the lunge takes, counted from the start of the attack. 0 = Attack Hit Delay.")]
+        public float lungeSeconds;
 
         [Header("Hit zones (shots)")]
         [Tooltip("Damage multiplier for a head hit. Zombie 1.5, crawler 1.2.")]

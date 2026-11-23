@@ -16,8 +16,10 @@ MonoBehaviour:
   displayName: Fuse
   description: An industrial fuse. It's a bit worn out, but it should still work.
     Hopefully...
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ba7145014dd4c214d9b623ef78007ca2, type: 3}
   inventoryModel: {fileID: 2721084560698328996, guid: 64fba6b840ad83845bcd07667c43d6c1, type: 3}
+  keepModelScale: 0
+  modelScale: 1
   category: 1
   width: 1
   height: 1

@@ -33,6 +33,7 @@ namespace Enemies
 
         // The hit still lands if the player stepped back a little during the swing.
         private const float ReachTolerance = 1.25f;
+        private const float LungeStopDistance = 1.8f; // the player's radius is 1, plus the enemy's body
 
         private static readonly int SpeedHash = Animator.StringToHash("Speed");
         private static readonly int AttackHash = Animator.StringToHash("Attack");
@@ -377,7 +378,7 @@ namespace Enemies
         /// <summary>Lands the hit if the target is still within reach (with a little tolerance).</summary>
         public void DealDamage()
         {
-            if (!HasTarget || DistanceToTarget > stats.attackRange * ReachTolerance) return;
+            if (!HasTarget || DistanceToTarget > HitReach) return;
 
             _targetDamageable.TakeDamage(stats.attackDamage, gameObject);
         }
@@ -391,6 +392,28 @@ namespace Enemies
         {
             Chase.SprintRequested = stats.CanSprint && !_sprintCancelled;
             Fsm.ChangeState(Chase);
+        }
+
+        /// <summary>Distance at which a hit still lands. Bigger than the start range, so stepping back one step does not dodge it.</summary>
+        public float HitReach => stats.attackReach > 0f ? stats.attackReach : stats.attackRange * ReachTolerance;
+
+        /// <summary>
+        /// One step of the attack lunge: moves up to 'distance' towards the target, never closer than LungeStopDistance
+        /// (so the enemy does not walk into the player). Slowed legs shorten it too. Returns how far it moved.
+        /// </summary>
+        public float LungeStep(float distance)
+        {
+            if (!HasTarget || !Agent.enabled || !Agent.isOnNavMesh) return 0f;
+
+            var toTarget = Target.position - transform.position;
+            toTarget.y = 0f;
+            var gap = toTarget.magnitude - LungeStopDistance;
+
+            var step = Mathf.Min(distance * (_legHits > 0 ? stats.legSlowScale : 1f), gap);
+            if (step <= 0f) return 0f;
+
+            Agent.Move(toTarget.normalized * step);
+            return step;
         }
 
         public bool IsTargetInAttackReach()
