@@ -20,6 +20,8 @@ namespace Bosses
         [SerializeField] private GameObject[] closeOnStart;
         [Tooltip("Switched OFF when the fight starts and ON when it ends: an open door, a light.")]
         [SerializeField] private GameObject[] openOnStart;
+        [Tooltip("Closed and locked when the fight starts. Unlocked again when it ends (they stay closed until the player opens them).")]
+        [SerializeField] private Door[] doors;
         [Tooltip("The boss stays asleep again when the fight ends. Off = he is left hunting.")]
         [SerializeField] private bool bossSleepsAtEnd = true;
 
@@ -49,6 +51,7 @@ namespace Bosses
             _started = true;
             SetObjects(closeOnStart, true);
             SetObjects(openOnStart, false);
+            SetDoors(true);
             if (boss) boss.Wake();
 
             Publish(true);
@@ -62,9 +65,23 @@ namespace Bosses
             _ended = true;
             SetObjects(closeOnStart, false);
             SetObjects(openOnStart, true);
+            SetDoors(false);
             if (boss && bossSleepsAtEnd) boss.Sleep();
 
             Publish(false);
+        }
+
+        private void SetDoors(bool locked)
+        {
+            if (doors == null) return;
+
+            foreach (var door in doors)
+            {
+                if (!door) continue;
+
+                if (locked) door.Lock();
+                else door.Unlock();
+            }
         }
 
         private static void SetObjects(GameObject[] objects, bool active)

@@ -224,7 +224,6 @@ MonoBehaviour:
   inventory: {fileID: 3888382706030324227}
   normalAmmo: {fileID: 11400000, guid: 91d3dd0e392794942b0782514395c7b6, type: 2}
   incendiaryAmmo: {fileID: 11400000, guid: c7c85ff596976af49b75663e1a9c0dc7, type: 2}
-  toggleKey: 38
 --- !u!114 &8539749774596365805
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -241,23 +240,21 @@ MonoBehaviour:
   cam: {fileID: 8264003597976672933}
   flashlightItem: {fileID: 11400000, guid: 79d51a061bd825a40b4ae01a5fe7a87c, type: 2}
   batteryItem: {fileID: 11400000, guid: f1726b8de8821444e9693223da380bc7, type: 2}
-  toggleKey: 31
-  swapBatteryKey: 16
-  batterySeconds: 10
+  batterySeconds: 30
   flickerBelow: 0.2
   level: 0
   low:
-    intensity: 4
-    range: 18
-    spotAngle: 50
-  medium:
-    intensity: 7
-    range: 28
-    spotAngle: 58
-  high:
     intensity: 12
     range: 40
     spotAngle: 66
+  medium:
+    intensity: 16
+    range: 48
+    spotAngle: 70
+  high:
+    intensity: 20
+    range: 56
+    spotAngle: 74
   lightOffset: {x: 0.25, y: -0.15, z: 0.2}
 --- !u!114 &2240711186525314276
 MonoBehaviour:
@@ -277,9 +274,6 @@ MonoBehaviour:
   regenPerSecond: 25
   regenDelay: 1
   recoverThreshold: 0.25
-  barSize: {x: 420, y: 10}
-  barBottomOffset: 70
-  fadeSpeed: 3
 --- !u!1 &1053865699183362461
 GameObject:
   m_ObjectHideFlags: 0
@@ -602,6 +596,7 @@ GameObject:
   - component: {fileID: 2228717010126443927}
   - component: {fileID: 8272827770786019272}
   - component: {fileID: 4599252104654575047}
+  - component: {fileID: 4408295226618130978}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -709,7 +704,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -779,6 +774,44 @@ MonoBehaviour:
   traumaDecay: 1.6
   damageForFullTrauma: 40
   photoKick: 0.15
+--- !u!114 &4408295226618130978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8169304794822285002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ea243df9df9b0841bd7a756352ce773, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.KadrLook
+  debugView: 0
+  fogColor: {r: 0.043, g: 0.063, b: 0.078, a: 1}
+  density: 0.04
+  noiseAmount: 0.35
+  noiseScale: 0.18
+  drift: {x: 0.15, y: 0.02, z: 0.1}
+  groundFog: 0.5
+  floorHeight: 0.1
+  groundFalloff: 0.6
+  disableBuiltInFog: 1
+  punchStart: 0.9
+  punchStrength: 2
+  glowThreshold: 0.8
+  glowStrength: 0.35
+  glowRadius: 0.035
+  litFog: 1
+  scatter: 0.25
+  intensityCap: 4
+  forwardScatter: 0.35
+  scatterDistance: 20
+  vignette: 0.55
+  vignetteInner: 0.35
+  vignetteOuter: 0.95
+  darkExtra: 0.15
+  pulseVignette: 0.12
+  follow: 4
 --- !u!1 &8286695195523168974
 GameObject:
   m_ObjectHideFlags: 0

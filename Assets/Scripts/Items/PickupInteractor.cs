@@ -8,7 +8,8 @@ namespace Items
 {
     /// <summary>
     /// On the Player. Every frame a short ray goes from the middle of the screen; if it hits an ItemPickup the
-    /// prompt is published, and E collects it. Nothing here knows about UI: it only publishes events.
+    /// prompt is published, and E collects it (or uses it: doors and anything else with IInteractTarget). Nothing here
+    /// knows about UI: it only publishes events.
     ///
     /// Off while the game is paused (inventory open) and while the player is dead.
     /// </summary>
@@ -43,6 +44,7 @@ namespace Items
             var blocked = Time.timeScale == 0f || inventory.IsOpen || (_health && _health.IsDead);
 
             IPickupTarget target = null;
+            IInteractTarget interact = null;
             if (!blocked)
             {
                 var first = FirstHit();
@@ -52,20 +54,27 @@ namespace Items
                     Debug.Log($"[PickupInteractor] ray hits: {(first ? first.name : "nothing")}", this);
                 }
 
-                if (first) target = first.GetComponentInParent<IPickupTarget>();
+                if (first)
+                {
+                    // A door, lever or terminal first; otherwise something that goes into the suitcase.
+                    interact = first.GetComponentInParent<IInteractTarget>();
+                    if (interact == null) target = first.GetComponentInParent<IPickupTarget>();
+                }
             }
 
             // Only publish when something changed, not every frame.
-            var prompt = target != null ? target.Prompt : null;
+            var prompt = interact != null ? interact.Prompt : target != null ? target.Prompt : null;
+            if (string.IsNullOrEmpty(prompt)) prompt = null;
             if (prompt != _shownPrompt)
             {
                 _shownPrompt = prompt;
                 Publish(new InteractPromptEvent(prompt != null, prompt ?? ""));
             }
 
-            if (target != null && KadrControls.Pressed(GameAction.Interact) && !target.TryCollect(inventory))
+            if (KadrControls.Pressed(GameAction.Interact))
             {
-                Publish(new NoticeEvent("Inventory full"));
+                if (interact != null) interact.Interact(cam.transform);
+                else if (target != null && !target.TryCollect(inventory)) Publish(new NoticeEvent("Inventory full"));
             }
         }
 

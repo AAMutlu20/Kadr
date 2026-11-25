@@ -2671,8 +2671,8 @@ NavMeshAgent:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4521641481822950460}
   m_Enabled: 1
-  m_AgentTypeID: 0
-  m_Radius: 1.5
+  m_AgentTypeID: -1372625422
+  m_Radius: 2
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
@@ -2716,6 +2716,8 @@ MonoBehaviour:
   headHeight: 8
   chargeLight: {fileID: 4467165355163350332}
   chargeLightIntensity: 40
+  photoRarity: 5
+  photoDanger: 3
   fireScale: 2.5
   fireLightRange: 16
   showTelegraphs: 1
@@ -2736,6 +2738,8 @@ MonoBehaviour:
   quadCooldownScale: 0.6
   farDistance: 35
   farSeconds: 4
+  normalAgentType: Boss
+  quadAgentType: BossCrawl
   approachDistance: 5.5
   trackUntil: 0.7
   meleeArc: 0.1
@@ -2816,7 +2820,7 @@ MonoBehaviour:
     form: 0
     damage: 40
     minRange: 0
-    maxRange: 18
+    maxRange: 12
     reach: 0
     lunge: 0
     hitAt: 0.55

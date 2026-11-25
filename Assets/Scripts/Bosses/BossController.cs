@@ -5,6 +5,7 @@ using Core;
 using Enemies;
 using Events;
 using Gameplay;
+using Photography;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -98,6 +99,11 @@ namespace Bosses
         [SerializeField] private Light chargeLight;
         [SerializeField] private float chargeLightIntensity = 40f;
 
+        [Header("Photo")]
+        [Tooltip("What a photo of him is worth: base value x Rarity x Danger. Added automatically if the boss has no Photographable.")]
+        [SerializeField, Min(0.1f)] private float photoRarity = 5f;
+        [SerializeField, Min(0.1f)] private float photoDanger = 3f;
+
         [Header("Fire (incendiary rounds)")]
         [Tooltip("Size of the shared fire effect (the camera's Burn Effect Prefab) on the boss. He is much bigger than a zombie.")]
         [SerializeField] private float fireScale = 2.5f;
@@ -140,6 +146,12 @@ namespace Bosses
         [Tooltip("In normal form, if the player stays farther away than this for Far Seconds, he drops to four legs to catch up.")]
         [SerializeField] private float farDistance = 35f;
         [SerializeField] private float farSeconds = 4f;
+
+        [Header("Navigation (Window > AI > Navigation > Agent Types)")]
+        [Tooltip("Agent type used while standing (tall, wide). Empty = no switching, the agent keeps its own type.")]
+        [SerializeField] private string normalAgentType = "Boss";
+        [Tooltip("Agent type used on four legs (low). He can pass bridges and low doors that the standing type cannot.")]
+        [SerializeField] private string quadAgentType = "BossCrawl";
 
         [Header("Movement")]
         [Tooltip("He walks until this close, then attacks. Must be smaller than the shortest melee Max Range, or he stands still.")]
@@ -191,6 +203,8 @@ namespace Bosses
         private readonly RaycastHit[] _groundHits = new RaycastHit[8];
 
         private readonly Dictionary<string, float> _clipLength = new();
+        private int _normalTypeId = -1;
+        private int _quadTypeId = -1;
         private BossForm _form = BossForm.Normal;
         private bool _awake;
         private bool _busy;
@@ -238,6 +252,7 @@ namespace Bosses
         {
             _agent = GetComponent<NavMeshAgent>();
             _health = GetComponent<Health>();
+
             if (!animator) animator = GetComponentInChildren<Animator>();
 
             if (!player)
@@ -262,6 +277,9 @@ namespace Bosses
 
             ReadClipLengths();
             WarnAboutMissingStates();
+
+            _normalTypeId = FindAgentType(normalAgentType);
+            _quadTypeId = FindAgentType(quadAgentType);
 
             _agent.angularSpeed = 0f; // turning is done here, so it matches the attack animations
             _agent.updateRotation = false;
@@ -335,7 +353,16 @@ namespace Bosses
 
             if (_formTimer <= 0f || _farTimer >= farSeconds)
             {
-                StartCoroutine(ChangeForm(_form == BossForm.Normal ? BossForm.Quadruped : BossForm.Normal));
+                var next = _form == BossForm.Normal ? BossForm.Quadruped : BossForm.Normal;
+
+                // Under a bridge or in a low doorway he stays on four legs until there is room to stand.
+                if (next == BossForm.Normal && !CanStandHere())
+                {
+                    _formTimer = 0.75f;
+                    return;
+                }
+
+                StartCoroutine(ChangeForm(next));
                 return;
             }
 
@@ -823,9 +850,51 @@ namespace Bosses
             _busy = false;
         }
 
+        private static int FindAgentType(string typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName)) return -1;
+
+            for (var i = 0; i < NavMesh.GetSettingsCount(); i++)
+            {
+                var settings = NavMesh.GetSettingsByIndex(i);
+                if (NavMesh.GetSettingsNameFromID(settings.agentTypeID) == typeName) return settings.agentTypeID;
+            }
+
+            Debug.LogWarning($"[BossController] No agent type named '{typeName}'. Add it in Window > AI > Navigation > Agent Types.");
+            return -1;
+        }
+
+        /// <summary>True if the standing agent type has NavMesh right here, so standing up cannot push him through a ceiling.</summary>
+        private bool CanStandHere()
+        {
+            if (_normalTypeId < 0) return true;
+
+            var filter = new NavMeshQueryFilter { agentTypeID = _normalTypeId, areaMask = NavMesh.AllAreas };
+            return NavMesh.SamplePosition(transform.position, out _, 1.5f, filter);
+        }
+
+        /// <summary>Swaps the agent to the NavMesh of the given form. The agent is re-placed on the nearest point of that mesh.</summary>
+        private void ApplyAgentType(BossForm form)
+        {
+            var id = form == BossForm.Normal ? _normalTypeId : _quadTypeId;
+            if (id < 0 || _agent.agentTypeID == id) return;
+
+            var position = transform.position;
+            _agent.enabled = false;
+            _agent.agentTypeID = id;
+            _agent.enabled = true;
+
+            var filter = new NavMeshQueryFilter { agentTypeID = id, areaMask = NavMesh.AllAreas };
+            if (NavMesh.SamplePosition(position, out var hit, 3f, filter)) _agent.Warp(hit.position);
+            else Debug.LogWarning($"[BossController] No NavMesh of type '{form}' near the boss. Bake a NavMesh Surface for that agent type.", this);
+
+            if (_agent.isOnNavMesh) _agent.isStopped = true;
+        }
+
         private void SetForm(BossForm form)
         {
             _form = form;
+            ApplyAgentType(form);
             _agent.speed = form == BossForm.Normal ? normalSpeed : quadSpeed;
 
             if (_bus != null || GameServices.TryGet(out _bus)) _bus.Publish(new BossFormEvent(form == BossForm.Quadruped));

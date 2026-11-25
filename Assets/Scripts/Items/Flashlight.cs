@@ -41,15 +41,15 @@ namespace Items
         [SerializeField] private ItemDefinition batteryItem;
 
         [Header("Battery")]
-        [Tooltip("Seconds of light from a full battery. 10 at the start, 15 and 20 after the Comisar's upgrades.")]
-        [SerializeField, Min(1f)] private float batterySeconds = 10f;
+        [Tooltip("Seconds of light from a full battery. 30 at the start; the Comisar's upgrades raise it.")]
+        [SerializeField, Min(1f)] private float batterySeconds = 30f;
         [SerializeField, Range(0f, 1f)] private float flickerBelow = 0.2f;
 
         [Header("Light")]
         [SerializeField] private LightLevel level = LightLevel.Low;
-        [SerializeField] private LevelSettings low = new() { intensity = 4f, range = 18f, spotAngle = 50f };
-        [SerializeField] private LevelSettings medium = new() { intensity = 7f, range = 28f, spotAngle = 58f };
-        [SerializeField] private LevelSettings high = new() { intensity = 12f, range = 40f, spotAngle = 66f };
+        [SerializeField] private LevelSettings low = new() { intensity = 12f, range = 40f, spotAngle = 66f };
+        [SerializeField] private LevelSettings medium = new() { intensity = 16f, range = 48f, spotAngle = 70f };
+        [SerializeField] private LevelSettings high = new() { intensity = 20f, range = 56f, spotAngle = 74f };
         [SerializeField] private Vector3 lightOffset = new(0.25f, -0.15f, 0.2f);
 
         private Light _light;
