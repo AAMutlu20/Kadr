@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 259596958394366131}
   - component: {fileID: 3215706651283530044}
   - component: {fileID: 4208104190060629032}
+  - component: {fileID: 353631275142998282}
   m_Layer: 0
   m_Name: WeatheredLight
   m_TagString: Untagged
@@ -91,6 +92,31 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &353631275142998282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 750405979051112995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 231c10d617a952644a6d5b7447f4e263, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.LightFlicker
+  lights:
+  - {fileID: 6436135139312196975}
+  variation: 2
+  seed: 1
+  spread: 0.35
+  strength: 0.6
+  speed: 12
+  lowest: 0.15
+  stutterEvery: 6
+  stutterLength: {x: 0.08, y: 0.4}
+  activeDistance: 30
+  glowRenderer: {fileID: 0}
+  glowColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!1 &6416244834479891927
 GameObject:
   m_ObjectHideFlags: 0

@@ -169,7 +169,7 @@ Material:
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
-    - _TileMetersA: 2
+    - _TileMetersA: 5
     - _TileMetersB: 1
     - _TwoLayers: 0
     - _WorkflowMode: 1

@@ -105,7 +105,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.LightFlicker
   lights:
-  - {fileID: 0}
+  - {fileID: 8637265537026961683}
+  variation: 2
+  seed: 1
+  spread: 0.35
   strength: 0.6
   speed: 12
   lowest: 0.15
