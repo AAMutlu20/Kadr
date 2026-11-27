@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using Core;
 using Events;
 using Gameplay;
+using Generation;
 using UnityEngine;
 
 namespace Bosses
@@ -16,6 +18,9 @@ namespace Bosses
     public class BossArena : MonoBehaviour
     {
         [SerializeField] private BossController boss;
+        [Tooltip("On: the fight starts when the player walks into the trigger. Off: it starts only when something calls Begin " +
+                 "(the cage terminal does).")]
+        [SerializeField] private bool startOnEnter = true;
         [Tooltip("Switched ON when the fight starts and OFF when it ends: doors, barriers, a gate behind the player.")]
         [SerializeField] private GameObject[] closeOnStart;
         [Tooltip("Switched OFF when the fight starts and ON when it ends: an open door, a light.")]
@@ -38,7 +43,7 @@ namespace Bosses
 
         private void OnTriggerEnter(Collider other)
         {
-            if (_started || _ended) return;
+            if (!startOnEnter || _started || _ended) return;
             if (!other.GetComponentInParent<PlayerController>()) return;
 
             Begin();
@@ -73,9 +78,18 @@ namespace Bosses
 
         private void SetDoors(bool locked)
         {
-            if (doors == null) return;
+            ApplyLock(doors, locked);
 
-            foreach (var door in doors)
+            // Generated levels: the doors of the room this arena sits in are added by the generator at run time.
+            var room = GetComponentInParent<RoomInstance>();
+            if (room) ApplyLock(room.Doors, locked);
+        }
+
+        private static void ApplyLock(IReadOnlyList<Door> list, bool locked)
+        {
+            if (list == null) return;
+
+            foreach (var door in list)
             {
                 if (!door) continue;
 

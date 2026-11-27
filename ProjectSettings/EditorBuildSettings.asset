@@ -6,7 +6,13 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/TestScene.unity
+    path: Assets/Scenes/Kadr/MainMenu.unity
+    guid: 5f08d2ea927c1d343a77b0c5bf8c498c
+  - enabled: 1
+    path: Assets/Scenes/Kadr/Lobby.unity
+    guid: efa33d429024cf44b97b3c70c0331817
+  - enabled: 1
+    path: Assets/Scenes/Kadr/LevelOne.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

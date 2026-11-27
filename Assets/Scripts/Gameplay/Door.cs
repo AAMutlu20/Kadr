@@ -62,6 +62,7 @@ namespace Gameplay
         private float _t;       // 0 closed, 1 fully open
         private float _targetT;
         private float _sign = 1f;
+        private bool _sealed;
 
         public bool IsLocked { get; private set; }
         public bool IsOpen => _targetT > 0.5f;
@@ -105,11 +106,27 @@ namespace Gameplay
 
         public void Unlock()
         {
-            if (!IsLocked) return;
+            if (_sealed || !IsLocked) return;
 
             IsLocked = false;
             onUnlocked?.Invoke();
             if (!string.IsNullOrEmpty(unlockedMessage)) Notice(unlockedMessage);
+        }
+
+        /// <summary>For spawners (the level generator): sets the group and the starting lock state of a door that was just created.</summary>
+        public void Configure(string groupName, bool locked)
+        {
+            group = groupName;
+            IsLocked = locked;
+        }
+
+        /// <summary>Locks the door for good: Unlock and UnlockGroup do nothing to it. For doorways that lead nowhere.</summary>
+        public void Seal(string message = null)
+        {
+            _sealed = true;
+            IsLocked = true;
+            group = null;
+            if (!string.IsNullOrEmpty(message)) lockedMessage = message;
         }
 
         public static void UnlockGroup(string groupName) => SetGroup(groupName, false);

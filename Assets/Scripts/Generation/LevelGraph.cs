@@ -30,6 +30,9 @@ namespace Generation
         public int PreBossId;
         public int BossId;
 
+        /// <summary>The dead-end branch room that holds the flashlight: the branch leaf deepest from the start. -1 if the level has no branch.</summary>
+        public int QuestRoomId = -1;
+
         public LevelNode AddNode(int parent, bool onCriticalPath)
         {
             var node = new LevelNode
@@ -109,7 +112,36 @@ namespace Generation
                 }
             }
 
+            graph.QuestRoomId = PickDeadEnd(graph);
             return graph;
+        }
+
+        /// <summary>
+        /// The leaf of a branch (never the critical path) that is farthest from the start in number of rooms. Ties go to
+        /// the lowest id, so this uses no randomness and every seed still gives the same layout as before.
+        /// </summary>
+        private static int PickDeadEnd(LevelGraph graph)
+        {
+            var best = -1;
+            var bestDepth = -1;
+
+            foreach (var node in graph.Nodes)
+            {
+                if (node.OnCriticalPath || !node.IsLeaf) continue;
+
+                var depth = 0;
+                for (var id = node.Id; graph.Nodes[id].Parent >= 0; id = graph.Nodes[id].Parent)
+                {
+                    depth++;
+                }
+
+                if (depth <= bestDepth) continue;
+
+                bestDepth = depth;
+                best = node.Id;
+            }
+
+            return best;
         }
     }
 

@@ -44,6 +44,7 @@ GameObject:
   - component: {fileID: 1949888694600082946}
   - component: {fileID: 3038486428063564438}
   - component: {fileID: 7055866001671695886}
+  - component: {fileID: 1011839516520808151}
   m_Layer: 0
   m_Name: default
   m_TagString: Untagged
@@ -144,3 +145,38 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.28961, y: 5.155188, z: 2}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1011839516520808151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5579508373768637555}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c902d97dba209e144bbfad24180c1d5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Items.ItemCrate
+  displayName: Crate
+  gridWidth: 4
+  gridHeight: 3
+  contents: []
+  lootTable:
+  - item: {fileID: 11400000, guid: 91d3dd0e392794942b0782514395c7b6, type: 2}
+    minCount: 0
+    maxCount: 4
+    chance: 0.16
+  - item: {fileID: 11400000, guid: 0d5419c1f3cebc44290a57f1750d0a3f, type: 2}
+    minCount: 0
+    maxCount: 1
+    chance: 0.18
+  - item: {fileID: 11400000, guid: 385ec3c396d906d40a9203d8af590f82, type: 2}
+    minCount: 0
+    maxCount: 2
+    chance: 0.2
+  maxDifferentItems: 1
+  neverEmpty: 0
+  allowStoring: 1
+  destroyWhenEmpty: 0
+  requiredKey: {fileID: 0}
+  consumeKey: 0

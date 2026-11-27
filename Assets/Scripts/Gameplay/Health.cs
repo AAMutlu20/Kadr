@@ -30,6 +30,9 @@ namespace Gameplay
         public bool IsDead { get; private set; }
         public float DamageTakenMultiplier { get; set; } = 1f;
 
+        /// <summary>Whatever dealt the most recent damage (null for fire, falls, or an unknown source). The debrief names it.</summary>
+        public GameObject LastDamageSource { get; private set; }
+
         /// <summary>Raised once, after the final HealthChangedEvent, when health reaches zero.</summary>
         public event Action Died;
 
@@ -50,6 +53,7 @@ namespace Gameplay
                 return;
             }
             amount *= DamageTakenMultiplier;
+            LastDamageSource = source;
 
             SetCurrent(_current - amount);
 

@@ -18,7 +18,7 @@ MonoBehaviour:
     Party! '
   icon: {fileID: 21300000, guid: a0945225afcc23140b85883568ed5d23, type: 3}
   inventoryModel: {fileID: 8647708879539645480, guid: cb7df9dc066702644977e9fa1ff26b79, type: 3}
-  keepModelScale: 1
+  keepModelScale: 0
   modelScale: 1
   category: 0
   width: 1

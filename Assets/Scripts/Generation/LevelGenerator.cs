@@ -2,12 +2,25 @@ using System.Collections.Generic;
 using System.Linq;
 using Core;
 using Events;
+using Gameplay;
+using Items;
 using UnityEngine;
 
 namespace Generation
 {
     /// <summary>
-    /// Represents what the generator hands back (graph, seed and spawned rooms by node id).
+    /// One doorway between two rooms: the parent node, the child node and the door leaf standing in it
+    /// (null when no door prefab is assigned).
+    /// </summary>
+    public class RoomConnection
+    {
+        public int ParentNode;
+        public int ChildNode;
+        public Door Door;
+    }
+
+    /// <summary>
+    /// Represents what the generator hands back (graph, seed, spawned rooms by node id and the doors between them).
     /// </summary>
     public class GeneratedLevel
     {
@@ -16,10 +29,28 @@ namespace Generation
         public LevelGraph Graph;
         public Transform Root;
         public readonly Dictionary<int, RoomInstance> Rooms = new Dictionary<int, RoomInstance>();
+        public readonly List<RoomConnection> Connections = new List<RoomConnection>();
+
+        /// <summary>The dead-end room that holds the flashlight (null if the level has no branch).</summary>
+        public RoomInstance QuestRoom;
+
+        /// <summary>The door a player walks through to enter this node from its parent (null for the start room).</summary>
+        public Door DoorInto(int nodeId)
+        {
+            foreach (var connection in Connections)
+            {
+                if (connection.ChildNode == nodeId)
+                {
+                    return connection.Door;
+                }
+            }
+
+            return null;
+        }
     }
 
     /// <summary>
-    /// Builds one level: graph -> tags -> room choice and physical placement (with backtracking) -> instantiate -> plugs.
+    /// Builds one level: graph -> tags -> room choice and physical placement (with backtracking) -> instantiate -> doors (unused doorways get a sealed one).
     /// Nothing is instantiated until a complete valid layout exists, so failed attempts cost no scene objects.
     /// NavMesh baking is not done here; hook it to the Generated event.
     /// </summary>
@@ -28,8 +59,22 @@ namespace Generation
         [Header("Rooms")]
         [SerializeField] private RoomDefinition startRoom;
         [SerializeField] private List<RoomDefinition> roomCatalog = new();
-        [Tooltip("5x5x1 slab with its origin on the socket point, extending local z -1 to 0. Optional while testing.")]
-        [SerializeField] private GameObject plugPrefab;
+
+        [Header("Doors")]
+        [Tooltip("A complete door (frame and leaf) spawned once per connection, on the socket point where two rooms meet. " +
+                 "The room prefabs only have a bare opening. The Door component sits on the hinge object inside the prefab. Optional while testing.")]
+        [SerializeField] private GameObject doorPrefab;
+        [Tooltip("World height the door prefab's pivot is placed at. The socket's own height is ignored.")]
+        [SerializeField] private float doorY = 5.1f;
+        [Tooltip("Shown when the player tries a sealed door: a doorway that leads nowhere (a dead end). It uses the same door prefab, locked for good.")]
+        [SerializeField] private string sealedMessage = "It won't open.";
+        [Tooltip("Locks every door when the level is built. Door.UnlockGroup(Door Group) opens them again (floor 2: the breaker).")]
+        [SerializeField] private bool lockDoors;
+        [SerializeField] private string doorGroup = "Level";
+
+        [Header("Quest items")]
+        [Tooltip("The flashlight, as an ItemPickup prefab. Placed in the dead-end room, at its QuestItemSpot.")]
+        [SerializeField] private GameObject flashlightPickupPrefab;
 
         [Header("Level shape")]
         [SerializeField, Range(1, 3)] private int depth = 1;
@@ -56,6 +101,8 @@ namespace Generation
             public Quaternion Rotation;
             public Bounds Box;
             public bool[] Used;
+            public int ParentSocket; // which socket of the parent room this room is attached to
+            public int OwnSocket;    // which of its own sockets faces the parent
         }
 
         private Placement[] _placed;
@@ -217,7 +264,9 @@ namespace Generation
                             Position = position,
                             Rotation = rotation,
                             Box = box,
-                            Used = new bool[prefab.SocketCount]
+                            Used = new bool[prefab.SocketCount],
+                            ParentSocket = parentSocket,
+                            OwnSocket = childSocket
                         };
                         placement.Used[childSocket] = true;
                         parent.Used[parentSocket] = true;
@@ -324,6 +373,17 @@ namespace Generation
             {
                 var p = _placed[i];
 
+                // When the kit had no room for the tag, a fallback room was used (e.g. Ambush -> Combat prefab).
+                // The room is what it physically is, so the node takes over its type and the spawner treats it as that.
+                // Boss and Safe keep their tag: a fallback Safe room must not get enemies, nor must the boss room.
+                var node = graph.Nodes[i];
+                var actual = p.Def.EncounterType;
+                if (actual != node.Encounter && node.Encounter != EncounterType.Boss && node.Encounter != EncounterType.Safe)
+                {
+                    Debug.Log($"[LevelGenerator] Node {i}: no {node.Encounter} room available, it became {actual}.");
+                    node.Encounter = actual;
+                }
+
                 var roomObject = Instantiate(p.Def.Prefab, p.Position, p.Rotation, level.Root);
                 roomObject.name = $"{i:00}_{p.Def.name}_{graph.Nodes[i].Encounter}";
 
@@ -337,24 +397,126 @@ namespace Generation
 
                     if (!p.Used[s])
                     {
-                        SpawnPlug(socket, roomObject.transform);
+                        SpawnSealedDoor(socket, roomObject.transform, i * 7 + s);
                     }
                 }
             }
 
+            // One door leaf per connection, after all rooms exist so both sides can be told about it.
+            for (var i = 1; i < graph.Nodes.Count; i++)
+            {
+                var placement = _placed[i];
+                var parentNode = graph.Nodes[i].Parent;
+                var socket = level.Rooms[parentNode].Sockets[placement.ParentSocket];
+
+                var door = SpawnDoor(socket, level.Root, i);
+                level.Connections.Add(new RoomConnection { ParentNode = parentNode, ChildNode = i, Door = door });
+
+                if (!door)
+                {
+                    continue;
+                }
+
+                level.Rooms[parentNode].AddDoor(door);
+                level.Rooms[i].AddDoor(door);
+            }
+
+            SpawnQuestItem(level);
+
             return level;
         }
 
-        private void SpawnPlug(Socket socket, Transform parent)
+        /// <summary>Puts the flashlight in the dead-end room, at its QuestItemSpot (or the middle of the room without one).</summary>
+        private void SpawnQuestItem(GeneratedLevel level)
         {
-            if (!plugPrefab)
+            var id = level.Graph.QuestRoomId;
+            if (id < 0)
             {
-                WarnOnce("No plug prefab assigned: unused doorways are left open.");
+                WarnOnce("This level has no dead-end branch, so the flashlight has no room. Set Branches Min to at least 1.");
                 return;
             }
 
+            level.QuestRoom = level.Rooms[id];
+
+            if (!flashlightPickupPrefab)
+            {
+                WarnOnce("No flashlight pickup prefab assigned: the dead-end room stays empty.");
+                return;
+            }
+
+            var room = level.QuestRoom;
+            var spot = room.GetComponentInChildren<QuestItemSpot>();
+
+            Vector3 position;
+            Quaternion rotation;
+            if (spot)
+            {
+                position = spot.transform.position;
+                rotation = spot.transform.rotation;
+            }
+            else
+            {
+                WarnOnce($"{room.name} has no QuestItemSpot: the flashlight is placed in the middle of the room.");
+                var bounds = room.Bounds.bounds;
+                position = new Vector3(bounds.center.x, bounds.min.y + 0.1f, bounds.center.z);
+                rotation = Quaternion.identity;
+            }
+
+            Instantiate(flashlightPickupPrefab, position, rotation, room.transform);
+        }
+
+        /// <summary>
+        /// Spawns the door prefab (frame and leaf) on the socket point. Both rooms' sockets sit on the same point, so one
+        /// door serves both. Every other door is turned 180 degrees, which moves its hinge to the other side, so a row
+        /// of rooms does not look copy-pasted.
+        /// </summary>
+        private Door SpawnDoor(Socket socket, Transform parent, int nodeId)
+        {
+            return SpawnDoorAt(socket, parent, nodeId, $"Door_{nodeId:00}");
+        }
+
+        private Door SpawnDoorAt(Socket socket, Transform parent, int variety, string objectName)
+        {
+            if (!doorPrefab)
+            {
+                WarnOnce("No door prefab assigned: connections are left as open doorways.");
+                return null;
+            }
+
             var rotation = Quaternion.LookRotation(socket.WorldForward, Vector3.up);
-            Instantiate(plugPrefab, socket.WorldPosition, rotation, parent);
+            if ((variety & 1) == 1)
+            {
+                rotation *= Quaternion.Euler(0f, 180f, 0f);
+            }
+
+            var position = socket.WorldPosition;
+            position.y = doorY;
+
+            var instance = Instantiate(doorPrefab, position, rotation, parent);
+            instance.name = objectName;
+
+            var door = instance.GetComponentInChildren<Door>(true);
+            if (!door)
+            {
+                WarnOnce("The door prefab has no Door component (put it on the hinge object inside the prefab).");
+                return null;
+            }
+
+            door.Configure(doorGroup, lockDoors);
+            return door;
+        }
+
+        /// <summary>
+        /// An unused doorway gets the same door prefab, locked for good: it shows "Locked" like any other locked door,
+        /// but no unlock call (Door.UnlockGroup, the boss arena) ever opens it.
+        /// </summary>
+        private void SpawnSealedDoor(Socket socket, Transform parent, int variety)
+        {
+            var door = SpawnDoorAt(socket, parent, variety, $"SealedDoor_{variety:000}");
+            if (door)
+            {
+                door.Seal(sealedMessage);
+            }
         }
 
         // Checks and logging

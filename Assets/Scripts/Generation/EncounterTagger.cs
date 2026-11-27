@@ -4,7 +4,7 @@ namespace Generation
     /// Gives every node of a LevelGraph an EncounterType. Runs on the abstract graph, before any room is chosen.
     ///
     /// Fixed rules:
-    ///   start = Safe, boss = Boss, the room before the boss = Safe.
+    ///   start = Safe, boss = Boss, the room before the boss = Safe, the dead-end quest room (flashlight) = Safe.
     /// Weighted, per depth rules:
     ///   path and branch-middle nodes pick from Transit / Combat / Ambush / Patrol / Elite,
     ///   branch ends (leaves) pick from Safe / Combat / Ambush / Elite.
@@ -56,7 +56,7 @@ namespace Generation
                 {
                     node.Encounter = EncounterType.Boss;
                 }
-                else if (node.Id == graph.PreBossId)
+                else if (node.Id == graph.PreBossId || node.Id == graph.QuestRoomId)
                 {
                     node.Encounter = EncounterType.Safe;
                 }

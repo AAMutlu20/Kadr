@@ -163,7 +163,7 @@ Material:
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _Smoothness: 0.5
-    - _SmoothnessA: 1
+    - _SmoothnessA: 0
     - _SmoothnessB: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1

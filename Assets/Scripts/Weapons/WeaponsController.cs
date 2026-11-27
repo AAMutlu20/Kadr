@@ -251,6 +251,13 @@ namespace Weapons
             if (!lowered) Current.Raised();
         }
 
+        /// <summary>A new run after a death: every weapon full again, and back to the pistol.</summary>
+        public void ResetLoadout()
+        {
+            foreach (var weapon in _weapons) weapon.Refill();
+            TrySelect(DefaultSlot);
+        }
+
         public bool TrySelect(int slot)
         {
             if (_switching || slot == _current || LightOn) return false;

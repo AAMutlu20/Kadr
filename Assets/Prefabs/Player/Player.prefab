@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 7590762003387391399}
   - component: {fileID: 8539749774596365805}
   - component: {fileID: 2240711186525314276}
+  - component: {fileID: 5153000527492126080}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -274,6 +275,30 @@ MonoBehaviour:
   regenPerSecond: 25
   regenDelay: 1
   recoverThreshold: 0.25
+--- !u!114 &5153000527492126080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766028040625068675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 944bd6847f21dce4f9989349a6a5b46c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.DeathFlow
+  floor: 1
+  respawnPoint: {fileID: 0}
+  mainMenuScene: MainMenu
+  photoPayoutRate: 0.5
+  keepItems:
+  - {fileID: 11400000, guid: 13641c49b62d77d4ea58629c45f4e6da, type: 2}
+  - {fileID: 11400000, guid: dafcdbbf7eae9684f9b48cdbb7ae0728, type: 2}
+  - {fileID: 11400000, guid: 983cbe2675678514fb88ced295f62aea, type: 2}
+  flashlightItem: {fileID: 11400000, guid: 79d51a061bd825a40b4ae01a5fe7a87c, type: 2}
+  blackSeconds: 0.8
+  rewindSeconds: 1.8
+  fadeInSeconds: 1
 --- !u!1 &1053865699183362461
 GameObject:
   m_ObjectHideFlags: 0

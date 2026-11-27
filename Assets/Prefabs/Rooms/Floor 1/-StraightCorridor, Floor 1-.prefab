@@ -1657,7 +1657,7 @@ GameObject:
   - component: {fileID: 1472233027687075508}
   - component: {fileID: 707719625927847105}
   - component: {fileID: 6437673078689743136}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: 'Spot Light '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4308,7 +4308,7 @@ GameObject:
   - component: {fileID: 8945153428154290322}
   - component: {fileID: 7702806795101224326}
   - component: {fileID: 6083153952709367972}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: WeatheredLight
   m_TagString: Untagged
   m_Icon: {fileID: 0}

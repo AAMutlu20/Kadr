@@ -124,7 +124,20 @@ namespace Menus
                 return;
             }
 
-            StartCoroutine(Leave(() => SceneManager.LoadScene(gameScene)));
+            StartCoroutine(Begin());
+        }
+
+        private IEnumerator Begin()
+        {
+            _busy = true;
+            _menu.Interactable = false;
+            KadrSettings.Save();
+
+            yield return new WaitForSecondsRealtime(0.25f); // the shutter flash plays
+
+            // The loading screen brings its own fade to black, so the menu does not fade out first.
+            SceneLoader.Load(gameScene, "LOBBY", LoadStyle.Full, null,
+                "ROLL 01", "MENU", "REPORT TO THE COMISAR. THE ELEVATOR IS WAITING.");
         }
 
         private void Quit()

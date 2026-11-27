@@ -78,6 +78,20 @@ namespace Photography
             }
         }
 
+        /// <summary>A new run: deletes every photo (and its picture) and forgets the repeat penalties.</summary>
+        public void Reset()
+        {
+            foreach (var photo in _photos)
+            {
+                if (photo.Image) UnityEngine.Object.Destroy(photo.Image);
+            }
+
+            _photos.Clear();
+            _shotsOfType.Clear();
+            _shotsTaken = 0;
+            Changed?.Invoke();
+        }
+
         public bool Contains(PhotoData photo) => _photos.Contains(photo);
 
         /// <summary>Locks a photo into the paid 12. At most 12 photos can be pinned.</summary>

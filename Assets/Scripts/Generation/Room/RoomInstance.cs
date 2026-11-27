@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Gameplay;
 using UnityEngine;
 
 namespace Generation
@@ -14,6 +15,19 @@ namespace Generation
     {
         [SerializeField] private List<Socket> sockets = new();
         [SerializeField] private BoxCollider bounds;
+
+        // Filled by the generator at run time: the door leaves standing in this room's doorways.
+        private readonly List<Door> doors = new();
+
+        public IReadOnlyList<Door> Doors => doors;
+
+        public void AddDoor(Door door)
+        {
+            if (door && !doors.Contains(door))
+            {
+                doors.Add(door);
+            }
+        }
 
         public IReadOnlyList<Socket> Sockets => sockets;
         public int SocketCount => sockets.Count;
