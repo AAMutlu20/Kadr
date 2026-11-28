@@ -40,6 +40,8 @@ namespace Bosses
         private bool _clearActive;
         private bool _cageOpen;
         private bool _photoDone;
+        private bool _cleared;
+        private bool _escaped;
         private int _lastCount = -1;
         private float _nextPoll;
 
@@ -80,8 +82,51 @@ namespace Bosses
 
             // The floor is clear: close the side task, point back at the terminal.
             _clearActive = false;
+            _cleared = true;
             _bus.Publish(new ObjectiveEvent(clearTitle, clearDoneText, true));
             _bus.Publish(new ObjectiveEvent(mainTitle, openCageText));
+        }
+
+        /// <summary>For saving: where the objectives are.</summary>
+        public void Export(out bool clearActive, out bool cleared, out bool cageOpen, out bool photoDone, out bool escaped)
+        {
+            clearActive = _clearActive;
+            cleared = _cleared;
+            cageOpen = _cageOpen;
+            photoDone = _photoDone;
+            escaped = _escaped;
+        }
+
+        /// <summary>
+        /// For loading a save: sets the flags and publishes the objectives again, in order, so the HUD and the suitcase's
+        /// orders note show where the player was.
+        /// </summary>
+        public void Import(bool clearActive, bool cleared, bool cageOpen, bool photoDone, bool escaped)
+        {
+            _clearActive = clearActive;
+            _cleared = cleared;
+            _cageOpen = cageOpen;
+            _photoDone = photoDone;
+            _escaped = escaped;
+            _lastCount = -1;
+            _nextPoll = 0f;
+
+            if (_bus == null) return;
+
+            if (cleared) _bus.Publish(new ObjectiveEvent(clearTitle, clearDoneText, true));
+            else if (clearActive)
+            {
+                _lastCount = ThreatTracker.Count;
+                _bus.Publish(new ObjectiveEvent(clearTitle, $"{clearText} ({_lastCount} left)"));
+            }
+
+            if (photoDone)
+            {
+                _bus.Publish(new ObjectiveEvent(mainTitle, mainText, true));
+                _bus.Publish(new ObjectiveEvent(clearTitle, escapeText, escaped));
+            }
+            else if (cageOpen) _bus.Publish(new ObjectiveEvent(mainTitle, photographText));
+            else if (cleared) _bus.Publish(new ObjectiveEvent(mainTitle, openCageText));
         }
 
         private void OnBlocked(CageBlockedEvent e)
@@ -120,6 +165,7 @@ namespace Bosses
         private void OnEncounter(BossEncounterEvent e)
         {
             // The fight ended (the player reached the elevator): nothing left to show.
+            if (!e.Started && _photoDone) _escaped = true;
             if (!e.Started && _photoDone) _bus.Publish(new ObjectiveEvent(clearTitle, escapeText, true));
         }
     }

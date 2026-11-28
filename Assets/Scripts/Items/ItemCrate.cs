@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Core;
 using Events;
+using Generation;
 using UnityEngine;
 
 namespace Items
@@ -84,6 +85,13 @@ namespace Items
         /// <summary>What is in the crate. A plain grid, same as the suitcase's.</summary>
         public InventoryGrid Grid { get; private set; }
 
+        /// <summary>True once the key was used (or none is needed). The save system reads and restores it.</summary>
+        public bool Unlocked
+        {
+            get => !requiredKey || _unlocked;
+            set { if (value) _unlocked = true; }
+        }
+
         public string Prompt => requiredKey && !_unlocked ? displayName + "  (locked)" : "Open " + displayName;
 
         private void Awake()
@@ -114,11 +122,13 @@ namespace Items
         {
             if (lootTable == null || lootTable.Length == 0) return;
 
+            var random = WorldRandom.For(transform.position);
+
             var order = new List<int>();
             for (var i = 0; i < lootTable.Length; i++) order.Add(i);
             for (var i = order.Count - 1; i > 0; i--)
             {
-                var j = UnityEngine.Random.Range(0, i + 1);
+                var j = random.Range(0, i + 1);
                 (order[i], order[j]) = (order[j], order[i]);
             }
 
@@ -129,10 +139,10 @@ namespace Items
 
                 var entry = lootTable[index];
                 if (entry == null || !entry.item) continue;
-                if (UnityEngine.Random.value > entry.chance) continue;
+                if (random.Value() > entry.chance) continue;
 
                 var max = Mathf.Max(entry.minCount, entry.maxCount);
-                rolled.Add((entry.item, UnityEngine.Random.Range(Mathf.Max(1, entry.minCount), max + 1)));
+                rolled.Add((entry.item, random.Range(Mathf.Max(1, entry.minCount), max + 1)));
             }
 
             if (rolled.Count == 0 && neverEmpty && Grid.Stacks.Count == 0)
@@ -145,8 +155,8 @@ namespace Items
 
                 if (pool.Count > 0)
                 {
-                    var pick = pool[UnityEngine.Random.Range(0, pool.Count)];
-                    rolled.Add((pick.item, UnityEngine.Random.Range(1, Mathf.Max(1, pick.maxCount) + 1)));
+                    var pick = pool[random.Range(0, pool.Count)];
+                    rolled.Add((pick.item, random.Range(1, Mathf.Max(1, pick.maxCount) + 1)));
                 }
             }
 

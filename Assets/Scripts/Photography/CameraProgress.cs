@@ -33,6 +33,22 @@ namespace Photography
 
         public int AbilityLevel(CameraAbility ability) => _levels[(int)ability];
 
+        /// <summary>For saving: a copy of the ability levels, indexed by CameraAbility.</summary>
+        public int[] ExportLevels() => (int[])_levels.Clone();
+
+        /// <summary>For loading a save. levels may be null (all zero).</summary>
+        public void Import(CameraBranch branch, int branchTier, CameraAbility equipped, int[] levels)
+        {
+            Branch = branch;
+            BranchTier = Mathf.Max(0, branchTier);
+            Equipped = equipped;
+
+            Array.Clear(_levels, 0, _levels.Length);
+            if (levels != null) Array.Copy(levels, _levels, Mathf.Min(levels.Length, _levels.Length));
+
+            Changed?.Invoke();
+        }
+
         public bool IsBranchLocked(CameraBranch branch) => Branch != CameraBranch.None && Branch != branch;
 
         // ---------- buying ----------

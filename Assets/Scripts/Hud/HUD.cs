@@ -64,6 +64,13 @@ namespace Hud
         [SerializeField] private AudioClip heartbeatClip;
         [SerializeField, Range(0f, 1f)] private float heartbeatVolume = 0.6f;
 
+        /// <summary>The first task, so the suitcase's orders panel can list it too.</summary>
+        public string StartTitle => startTitle;
+        public string StartText => startText;
+
+        /// <summary>For loading a save: the first task would be wrong now, so it is never shown.</summary>
+        public void SkipStartTask() => _startDelay = -1f;
+
         private static readonly Color Cream = new(0.85f, 0.82f, 0.72f, 1f);
         private static readonly Color Grey = new(0.56f, 0.54f, 0.47f, 1f);
         private static readonly Color Rule = new(0.29f, 0.29f, 0.25f, 1f);

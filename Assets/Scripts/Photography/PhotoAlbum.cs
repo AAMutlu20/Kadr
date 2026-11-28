@@ -28,6 +28,33 @@ namespace Photography
 
         public IReadOnlyList<PhotoData> Photos => _photos;
 
+        /// <summary>For saving: how many photos of each subject type were taken this run.</summary>
+        public IReadOnlyDictionary<string, int> ShotsOfType => _shotsOfType;
+
+        /// <summary>For saving: how many photos were taken this run (the next photo number).</summary>
+        public int ShotsTaken => _shotsTaken;
+
+        /// <summary>For loading a save: replaces the album with these photos.</summary>
+        public void Restore(IEnumerable<PhotoData> photos, IReadOnlyDictionary<string, int> shots, int shotsTaken)
+        {
+            foreach (var photo in _photos)
+            {
+                if (photo.Image) UnityEngine.Object.Destroy(photo.Image);
+            }
+
+            _photos.Clear();
+            _shotsOfType.Clear();
+
+            if (photos != null) _photos.AddRange(photos);
+            if (shots != null)
+            {
+                foreach (var pair in shots) _shotsOfType[pair.Key] = pair.Value;
+            }
+
+            _shotsTaken = Mathf.Max(0, shotsTaken);
+            Changed?.Invoke();
+        }
+
         /// <summary>Raised after the album changed (a photo kept, dropped, pinned or discarded).</summary>
         public event Action Changed;
 

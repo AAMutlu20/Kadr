@@ -317,6 +317,25 @@ namespace Bosses
             _agent.isStopped = false;
         }
 
+        /// <summary>
+        /// For loading a save: puts him where he was. The arena has already woken him if the fight was running; this only
+        /// moves him and, if he was on four legs, puts him back on four legs.
+        /// </summary>
+        public void RestoreState(Vector3 position, float yaw, bool quadruped)
+        {
+            if (_agent && _agent.enabled && _agent.isOnNavMesh) _agent.Warp(position);
+            else transform.position = position;
+
+            transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+            if (!_awake || !quadruped) return;
+
+            SetForm(BossForm.Quadruped);
+            _formTimer = UnityEngine.Random.Range(quadSeconds.x, quadSeconds.y);
+            _playing = null;
+            PlayLocomotion(false);
+        }
+
         /// <summary>Stops the fight: he stands still. The arena calls this when the encounter ends.</summary>
         public void Sleep()
         {

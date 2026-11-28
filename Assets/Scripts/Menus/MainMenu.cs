@@ -1,4 +1,5 @@
 using System.Collections;
+using Saving;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -40,6 +41,7 @@ namespace Menus
         [SerializeField, Range(0f, 5f)] private float mouseParallaxDegrees = 2f;
 
         private ViewfinderMenu _menu;
+        private SaveSlotMenu _slots;
         private MenuPage _main;
         private MenuPage _settings;
         private bool _busy;
@@ -97,8 +99,11 @@ namespace Menus
 
         private void BuildPages()
         {
+            // The slot menu first: DESCEND opens it.
+            _slots = new SaveSlotMenu(_menu, ShowMain, StartSlot);
+
             _main = new MenuPage { Heading = "ROLL 01" };
-            _main.Entries.Add(new MenuEntry { Label = "DESCEND", Sub = "СПУСК", Select = Play });
+            _main.Entries.Add(new MenuEntry { Label = "DESCEND", Sub = "СПУСК", Select = () => _slots.Show() });
             _main.Entries.Add(new MenuEntry { Label = "SETTINGS", Sub = "НАСТРОЙКИ", Select = () => _menu.Show(_settings) });
             _main.Entries.Add(new MenuEntry { Label = "QUIT", Sub = "ВЫХОД", Select = Quit });
 
@@ -113,7 +118,8 @@ namespace Menus
 
         // ---------- actions ----------
 
-        private void Play()
+        // Called by the slot menu: the slot to play and whether it starts from scratch.
+        private void StartSlot(int slot, bool newGame)
         {
             if (_busy) return;
 
@@ -124,10 +130,10 @@ namespace Menus
                 return;
             }
 
-            StartCoroutine(Begin());
+            StartCoroutine(Begin(slot, newGame));
         }
 
-        private IEnumerator Begin()
+        private IEnumerator Begin(int slot, bool newGame)
         {
             _busy = true;
             _menu.Interactable = false;
@@ -135,9 +141,13 @@ namespace Menus
 
             yield return new WaitForSecondsRealtime(0.25f); // the shutter flash plays
 
+            // The slot decides where we go: the Lobby, or the floor of a telephone save.
+            var plan = SaveSystem.Begin(slot, newGame, gameScene);
+
             // The loading screen brings its own fade to black, so the menu does not fade out first.
-            SceneLoader.Load(gameScene, "LOBBY", LoadStyle.Full, null,
-                "ROLL 01", "MENU", "REPORT TO THE COMISAR. THE ELEVATOR IS WAITING.");
+            // SaveGame.ApplyPending runs under the black once the scene is up.
+            SceneLoader.Load(plan.Scene, plan.Destination, LoadStyle.Full, SaveGame.ApplyPending,
+                "ROLL " + (slot + 1).ToString("00"), "MENU", plan.Brief ?? "REPORT TO THE COMISAR. THE ELEVATOR IS WAITING.");
         }
 
         private void Quit()

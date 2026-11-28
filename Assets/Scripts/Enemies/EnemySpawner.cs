@@ -29,6 +29,24 @@ namespace Enemies
     /// </summary>
     public class EnemySpawner : MonoBehaviour
     {
+        /// <summary>One enemy of a telephone save.</summary>
+        public class Snapshot
+        {
+            public string Prefab;
+            public Vector3 Position;
+            public float Yaw;
+            public float Health;
+        }
+
+        /// <summary>
+        /// Set by the save system before the scene loads. The next floor is filled with exactly these enemies (the ones that
+        /// were still alive) instead of rolling new ones. Used once.
+        /// </summary>
+        public static List<Snapshot> PendingRestore;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => PendingRestore = null;
+
         [SerializeField] private LevelGenerator generator;
         [SerializeField] private EnemySpawnTable table;
 
@@ -130,13 +148,45 @@ namespace Enemies
                     yield return null;
                 }
 
-                if (level.Root) Spawn(level);
+                if (level.Root)
+                {
+                    if (PendingRestore != null) RestoreEnemies(level);
+                    else Spawn(level);
+                }
             }
             finally
             {
                 ThreatTracker.RemovePending();
                 _running = null;
             }
+        }
+
+        private void RestoreEnemies(GeneratedLevel level)
+        {
+            var saved = PendingRestore;
+            PendingRestore = null;
+
+            var prefabs = new Dictionary<string, EnemyController>();
+            foreach (var entry in table.Enemies)
+            {
+                if (entry != null && entry.prefab) prefabs[entry.prefab.name] = entry.prefab;
+            }
+
+            var placed = 0;
+            foreach (var enemy in saved)
+            {
+                if (!prefabs.TryGetValue(enemy.Prefab, out var prefab))
+                {
+                    Debug.LogWarning($"[EnemySpawner] Saved enemy \"{enemy.Prefab}\" is not in the spawn table, skipped.", this);
+                    continue;
+                }
+
+                var spawned = Instantiate(prefab, enemy.Position, Quaternion.Euler(0f, enemy.Yaw, 0f), level.Root);
+                if (spawned.TryGetComponent<Health>(out var health)) health.Restore(enemy.Health);
+                placed++;
+            }
+
+            Debug.Log($"[EnemySpawner] Restored {placed} of {saved.Count} saved enemies.");
         }
 
         private void Spawn(GeneratedLevel level)

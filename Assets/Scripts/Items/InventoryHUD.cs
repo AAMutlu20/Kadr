@@ -1,3 +1,6 @@
+using UnityEngine.SceneManagement;
+using Hud;
+using System.Text;
 using System.Collections.Generic;
 using Core;
 using Events;
@@ -105,6 +108,10 @@ namespace Items
         private float _hpShown = 1f; // eases towards the real value so the bar drains smoothly
         private float _hpScroll;
 
+        // The real orders: filled from the first task and from ObjectiveEvents, in the order they appeared.
+        private readonly List<string> _objectiveOrder = new();
+        private readonly Dictionary<string, (string text, bool done)> _objectives = new();
+
         private void Start()
         {
             _font = KadrFont.Body;
@@ -123,7 +130,12 @@ namespace Items
             if (GameServices.TryGet(out _bus))
             {
                 _bus.Subscribe<XpChangedEvent>(OnXpChanged);
+                _bus.Subscribe<ObjectiveEvent>(OnObjective);
+                _bus.Subscribe<RunRestartedEvent>(OnRunRestarted);
             }
+
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            ResetObjectives();
 
             SetVisible(false);
         }
@@ -133,7 +145,11 @@ namespace Items
             if (_bus != null)
             {
                 _bus.Unsubscribe<XpChangedEvent>(OnXpChanged);
+                _bus.Unsubscribe<ObjectiveEvent>(OnObjective);
+                _bus.Unsubscribe<RunRestartedEvent>(OnRunRestarted);
             }
+
+            SceneManager.sceneLoaded -= OnSceneLoaded;
 
             if (_hpTexture) Destroy(_hpTexture);
             if (_xpTexture) Destroy(_xpTexture);
@@ -171,6 +187,44 @@ namespace Items
         {
             if (_ordersTitleText) _ordersTitleText.text = title;
             if (_ordersBodyText) _ordersBodyText.text = body;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => ResetObjectives();
+
+        private void OnRunRestarted(RunRestartedEvent e) => ResetObjectives();
+
+        // The first task comes from the HUD's start text (it never goes over the bus), the rest from ObjectiveEvents.
+        private void ResetObjectives()
+        {
+            _objectiveOrder.Clear();
+            _objectives.Clear();
+
+            var kadr = FindAnyObjectByType<KadrHud>();
+            if (kadr && !string.IsNullOrEmpty(kadr.StartText)) OnObjective(new ObjectiveEvent(kadr.StartTitle, kadr.StartText));
+            else RefreshOrders();
+        }
+
+        private void OnObjective(ObjectiveEvent e)
+        {
+            if (string.IsNullOrEmpty(e.Title)) return;
+
+            if (!_objectives.ContainsKey(e.Title)) _objectiveOrder.Add(e.Title);
+            _objectives[e.Title] = (e.Text, e.Completed);
+            RefreshOrders();
+        }
+
+        private void RefreshOrders()
+        {
+            if (!_ordersBodyText) return;
+
+            var sb = new StringBuilder();
+            foreach (var title in _objectiveOrder)
+            {
+                var (text, done) = _objectives[title];
+                sb.Append(done ? "<color=#7d766a>[x] " : "[ ] ").Append(text).Append(done ? "</color>" : "").Append('\n');
+            }
+
+            _ordersBodyText.text = sb.Length > 0 ? sb.ToString().TrimEnd() : ordersBody;
         }
 
         /// <summary>
@@ -526,6 +580,10 @@ namespace Items
 
             _ordersBodyText = MakeText(paper.transform, ordersBody, 30, TextAnchor.UpperLeft);
             _ordersBodyText.color = ink;
+            _ordersBodyText.supportRichText = true;
+            _ordersBodyText.resizeTextForBestFit = true;
+            _ordersBodyText.resizeTextMinSize = 16;
+            _ordersBodyText.resizeTextMaxSize = 30;
             Anchor(_ordersBodyText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -76f),
                 new Vector2(OrdersPanelSize.x - 50f, OrdersPanelSize.y - 100f), new Vector2(0.5f, 1f));
 

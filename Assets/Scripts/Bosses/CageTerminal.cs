@@ -66,6 +66,15 @@ namespace Bosses
             CageTerminalScreen.Show(this);
         }
 
+        /// <summary>For loading a save: the cage was already open. Plays the open hooks again, but does not start the fight.</summary>
+        public void RestoreOpen()
+        {
+            if (IsOpen) return;
+
+            IsOpen = true;
+            onCageOpened?.Invoke();
+        }
+
         /// <summary>Opens the cage. Called by the screen's button, and only works with no threats left.</summary>
         public void OpenCage()
         {

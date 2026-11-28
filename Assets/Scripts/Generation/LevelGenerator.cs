@@ -93,6 +93,9 @@ namespace Generation
 
         public GeneratedLevel Current { get; private set; }
 
+        /// <summary>Set by the save system before the scene loads: the next Generate() uses this seed, once.</summary>
+        public static int? PendingSeed;
+
         // Search state, valid only while Generate runs.
         private class Placement
         {
@@ -129,7 +132,9 @@ namespace Generation
                 return null;
             }
 
-            var seed = useFixedSeed ? fixedSeed : System.Environment.TickCount;
+            // A save can ask for a floor it has seen before (a telephone save). Used once.
+            var seed = PendingSeed ?? (useFixedSeed ? fixedSeed : System.Environment.TickCount);
+            PendingSeed = null;
             Debug.Log($"[LevelGenerator] Seed {seed}, depth {depth}");
 
             for (var attempt = 0; attempt < maxGraphAttempts; attempt++)
@@ -358,8 +363,16 @@ namespace Generation
 
         // Instantiate
 
+        private void OnDestroy()
+        {
+            WorldRandom.Seed = null;
+        }
+
         private GeneratedLevel Build(LevelGraph graph, int seed, int attempt)
         {
+            // Crates and loot racks roll from this, so the same seed gives the same loot.
+            WorldRandom.Seed = seed;
+
             var rootObject = new GameObject("GeneratedLevel");
             var level = new GeneratedLevel
             {
@@ -462,7 +475,8 @@ namespace Generation
                 rotation = Quaternion.identity;
             }
 
-            Instantiate(flashlightPickupPrefab, position, rotation, room.transform);
+            var pickup = Instantiate(flashlightPickupPrefab, position, rotation, room.transform);
+            SpawnRack.SitOnHeight(pickup, position.y);
         }
 
         /// <summary>

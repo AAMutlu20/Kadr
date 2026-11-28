@@ -80,6 +80,14 @@ namespace Gameplay
             SetCurrent(maxHealth);
         }
 
+        /// <summary>For loading a save: sets the health directly. Silent (no hurt reaction), never kills.</summary>
+        public void Restore(float current)
+        {
+            IsDead = false;
+            _current = Mathf.Clamp(current, 1f, maxHealth);
+            PublishChange(0f);
+        }
+
         private void SetCurrent(float value)
         {
             var clamped = Mathf.Clamp(value, 0f, maxHealth);

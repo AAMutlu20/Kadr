@@ -121,6 +121,23 @@ namespace Menus
 
         // ---------- state ----------
 
+        /// <summary>
+        /// The shortest the full loading screen stays up, counted from when it has faded in until READY. Raise it to
+        /// give the screen more time, lower it to hurry. Reaching READY early is never possible, so a fast load still
+        /// plays all four frames.
+        /// </summary>
+        public static float MinSecondsFull = 4.5f;
+
+        /// <summary>Same for the minimal screen (after a death).</summary>
+        public static float MinSecondsMinimal = 0.6f;
+
+        /// <summary>How long READY and the stamp stay before the screen fades out (full style).</summary>
+        public static float ReadyHoldSeconds = 1.0f;
+
+        // When each frame is due, as a share of the minimum time. The scene wakes up at the second slot.
+        private static readonly float[] FullSlots = { 0.12f, 0.30f, 0.62f, 0.92f };
+        private static readonly float[] MinimalSlots = { 0f, 0.1f, 0.5f, 0.9f };
+
         private static readonly string[] FrameNames = { "LOADED", "ENTERED", "SET", "READY" };
         private const float GaugeWidth = 920f;
         private const int Ticks = 21;
@@ -153,6 +170,7 @@ namespace Menus
         private float _needleTarget;
         private float _stampT = -1f;
         private int _stage;
+        private float _stageTime;
         private float _flashAlpha;
         private float _time;
 
@@ -194,6 +212,11 @@ namespace Menus
                 yield break;
             }
 
+            // The stages are paced on a timeline, so the player sees each frame expose even when the real work is instant.
+            // A stage never shows earlier than its slot, and never before its real work is done.
+            var minSeconds = style == LoadStyle.Full ? MinSecondsFull : MinSecondsMinimal;
+            var slot = style == LoadStyle.Full ? FullSlots : MinimalSlots;
+
             var op = SceneManager.LoadSceneAsync(scene);
             op.allowSceneActivation = false;
 
@@ -203,10 +226,13 @@ namespace Menus
                 yield return null;
             }
 
+            yield return WaitUntilTime(started + minSeconds * slot[0]);
             ExposeFrame(1);
             yield return null;
             yield return null; // so the screen is drawn before the scene takes the frame
 
+            // The scene stays asleep until its slot: nothing runs behind the black before the player has seen the screen.
+            yield return WaitUntilTime(started + minSeconds * slot[1]);
             op.allowSceneActivation = true;
             while (!op.isDone) yield return null;
 
@@ -225,26 +251,29 @@ namespace Menus
                 }
             }
 
+            // Let the NavMesh bake and the spawners settle.
+            yield return new WaitForSecondsRealtime(0.4f);
+
+            yield return WaitUntilTime(started + minSeconds * slot[2]);
             ExposeFrame(3);
 
-            // Let the NavMesh bake and the spawners settle, and keep the screen up long enough to read.
-            var minSeconds = style == LoadStyle.Full ? 2.2f : 0.5f;
-            var settle = 0f;
-            while (settle < 0.4f || Time.unscaledTime - started < minSeconds)
-            {
-                settle += Time.unscaledDeltaTime;
-                yield return null;
-            }
-
+            yield return WaitUntilTime(started + minSeconds * slot[3]);
             ExposeFrame(4);
             _stampT = 0f;
-            yield return new WaitForSecondsRealtime(style == LoadStyle.Full ? 0.6f : 0.1f);
+
+            // READY and the stamp stay on screen for a moment before the screen opens.
+            yield return new WaitForSecondsRealtime(style == LoadStyle.Full ? ReadyHoldSeconds : 0.1f);
 
             _holdStart = Time.unscaledTime;
             _holding = true;
             onLoaded?.Invoke();
 
             if (autoRelease) yield return FadeOutAndClose(0.8f);
+        }
+
+        private static IEnumerator WaitUntilTime(float unscaledTime)
+        {
+            while (Time.unscaledTime < unscaledTime) yield return null;
         }
 
         private IEnumerator FadeOutAndClose(float seconds)
@@ -298,6 +327,7 @@ namespace Menus
         private void ExposeFrame(int number)
         {
             _stage = number;
+            _stageTime = Time.unscaledTime;
             _needleTarget = number / 4f;
             _flashAlpha = 0.35f;
 
@@ -330,9 +360,9 @@ namespace Menus
             if (_needle)
             {
                 // The needle follows the real progress, a little behind it, and creeps forward while it waits.
-                var creep = _stage < 4 ? 0.02f : 0f;
+                var creep = _stage < 4 ? 0.2f * Mathf.Clamp01((Time.unscaledTime - _stageTime) / 1.2f) : 0f;
                 _needleTarget = Mathf.Max(_needleTarget, _stage / 4f);
-                _needleShown = Mathf.MoveTowards(_needleShown, Mathf.Min(_needleTarget + creep, 1f), dt * 0.5f);
+                _needleShown = Mathf.MoveTowards(_needleShown, Mathf.Min(_needleTarget + creep, 1f), dt * 0.35f);
                 _needle.anchoredPosition = new Vector2(_needleShown * GaugeWidth, _needle.anchoredPosition.y);
             }
 

@@ -21,6 +21,13 @@ namespace Gameplay
             Changed = null;
         }
 
+        /// <summary>For loading a save.</summary>
+        public static void Set(int roubles)
+        {
+            Roubles = Mathf.Max(0, roubles);
+            Changed?.Invoke(Roubles);
+        }
+
         public static void Add(int amount)
         {
             if (amount <= 0) return;

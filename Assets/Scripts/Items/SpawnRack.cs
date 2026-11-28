@@ -56,7 +56,8 @@ namespace Items
             if (_spawned) return;
             _spawned = true;
 
-            if (UnityEngine.Random.value > spawnChance) return;
+            var roll = WorldRandom.For(transform.position);
+            if (roll.Value() > spawnChance) return;
 
             var total = 0f;
             foreach (var option in options)
@@ -72,30 +73,32 @@ namespace Items
 
             var room = GetComponentInParent<RoomInstance>();
             var parent = room ? room.transform : transform.root;
-            var count = UnityEngine.Random.Range(countMin, Mathf.Max(countMin, countMax) + 1);
+            var count = roll.Range(countMin, Mathf.Max(countMin, countMax) + 1);
 
             for (var i = 0; i < count; i++)
             {
-                var prefab = PickPrefab(total);
+                var prefab = PickPrefab(total, roll);
 
                 var offset = Vector3.zero;
                 if (scatterRadius > 0f && count > 1)
                 {
-                    var circle = UnityEngine.Random.insideUnitCircle * scatterRadius;
+                    var circle = roll.InsideUnitCircle() * scatterRadius;
                     offset = transform.TransformVector(new Vector3(circle.x, 0f, circle.y));
                 }
 
-                var turn = yaw > 0f ? UnityEngine.Random.Range(-yaw * 0.5f, yaw * 0.5f) : 0f;
+                var turn = yaw > 0f ? roll.Range(-yaw * 0.5f, yaw * 0.5f) : 0f;
                 var rotation = transform.rotation * Quaternion.Euler(0f, turn, 0f);
 
                 var spawned = Instantiate(prefab, transform.position + offset, rotation, parent);
-                SitOnPoint(spawned);
+                SitOnHeight(spawned, transform.position.y);
             }
         }
 
-        // Lifts (or lowers) the spawned object so the lowest point of its model touches this object's height,
-        // whatever the prefab's pivot is (centre, top or bottom).
-        private void SitOnPoint(GameObject spawned)
+        /// <summary>
+        /// Lifts (or lowers) an object so the lowest point of its model touches the given world height,
+        /// whatever its pivot is (centre, top or bottom). Also used for the quest item.
+        /// </summary>
+        public static void SitOnHeight(GameObject spawned, float surfaceY)
         {
             var found = false;
             var bounds = new Bounds();
@@ -117,12 +120,12 @@ namespace Items
 
             if (!found) return;
 
-            spawned.transform.position += Vector3.up * (transform.position.y - bounds.min.y);
+            spawned.transform.position += Vector3.up * (surfaceY - bounds.min.y);
         }
 
-        private GameObject PickPrefab(float total)
+        private GameObject PickPrefab(float total, WorldRandom.Roller random)
         {
-            var roll = UnityEngine.Random.value * total;
+            var roll = random.Value() * total;
             GameObject last = null;
 
             foreach (var option in options)

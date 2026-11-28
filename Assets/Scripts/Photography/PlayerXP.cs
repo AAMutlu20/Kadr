@@ -65,6 +65,32 @@ namespace Photography
             Discovered.Clear();
         }
 
+        /// <summary>For saving: everything that PlayerXp keeps between runs.</summary>
+        public static void Export(out int progress, out int points, out int pointsEarned, out string[] discovered)
+        {
+            progress = _progress;
+            points = _points;
+            pointsEarned = _pointsEarned;
+            discovered = new string[Discovered.Count];
+            Discovered.CopyTo(discovered);
+        }
+
+        /// <summary>For loading a save. discovered may be null.</summary>
+        public static void Import(int progress, int points, int pointsEarned, IEnumerable<string> discovered)
+        {
+            _progress = Mathf.Max(0, progress);
+            _points = Mathf.Max(0, points);
+            _pointsEarned = Mathf.Max(0, pointsEarned);
+
+            Discovered.Clear();
+            if (discovered != null)
+            {
+                foreach (var id in discovered) Discovered.Add(id);
+            }
+
+            Publish(0, false);
+        }
+
         public static void Add(int xp)
         {
             if (xp <= 0) return;

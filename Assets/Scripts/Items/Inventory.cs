@@ -54,7 +54,8 @@ namespace Items
 
         private void Start()
         {
-            if (startingItems == null) return;
+            // A loaded save brings its own inventory: the testing items would be added on top of it.
+            if (startingItems == null || Saving.SaveSystem.LoadedFromSave) return;
 
             foreach (var item in startingItems)
             {

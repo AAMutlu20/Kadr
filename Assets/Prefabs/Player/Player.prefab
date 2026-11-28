@@ -20,6 +20,8 @@ GameObject:
   - component: {fileID: 8539749774596365805}
   - component: {fileID: 2240711186525314276}
   - component: {fileID: 5153000527492126080}
+  - component: {fileID: 1370008861227736480}
+  - component: {fileID: 7963300197268042581}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -288,7 +290,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.DeathFlow
   floor: 1
-  respawnPoint: {fileID: 0}
+  respawnScene: Lobby
   mainMenuScene: MainMenu
   photoPayoutRate: 0.5
   keepItems:
@@ -299,6 +301,31 @@ MonoBehaviour:
   blackSeconds: 0.8
   rewindSeconds: 1.8
   fadeInSeconds: 1
+--- !u!114 &1370008861227736480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766028040625068675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 171ab661b5270f04083c7f933f7d4591, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Menus.PauseMenu
+  mainMenuScene: MainMenu
+--- !u!114 &7963300197268042581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766028040625068675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9407c8e46955d5438ebf9cfeb02bea4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Saving.SaveGame
 --- !u!1 &1053865699183362461
 GameObject:
   m_ObjectHideFlags: 0

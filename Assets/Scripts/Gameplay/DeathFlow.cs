@@ -8,6 +8,7 @@ using Generation;
 using Items;
 using Menus;
 using Photography;
+using Saving;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -58,6 +59,7 @@ namespace Gameplay
         private Inventory _inventory;
         private CameraController _camera;
         private WeaponController _weapons;
+        private PlayerController _player;
         private LevelGenerator _generator;
         private PlayerStamina _stamina;
         private Flashlight _flashlight;
@@ -77,6 +79,7 @@ namespace Gameplay
             _health = GetComponent<Health>();
             _inventory = GetComponent<Inventory>();
             _stamina = GetComponent<PlayerStamina>();
+            _player = GetComponent<PlayerController>();
 
         }
 
@@ -146,6 +149,7 @@ namespace Gameplay
 
             Freeze();
             ApplyCosts(summary);
+            SaveGame.AutoSave(true); // the run is over: keep progress, drop the telephone checkpoint
 
             if (GameServices.TryGet(out EventBus bus)) bus.Publish(new PlayerDiedEvent(_deaths));
 
@@ -193,6 +197,7 @@ namespace Gameplay
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             if (_weapons) _weapons.InputEnabled = false;
+            if (_player) _player.InputEnabled = false; // no looking around behind the debrief
 
             // Every other overlay goes dark: the HUD, the inventory, the photo viewfinder, the white flash of a boss.
             _hidden.Clear();
@@ -317,6 +322,7 @@ namespace Gameplay
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             if (_weapons) _weapons.InputEnabled = true;
+            if (_player) _player.InputEnabled = true; // alive again (Respawn healed it)
 
             yield return SceneLoader.Release(fadeInSeconds);
             _dying = false;

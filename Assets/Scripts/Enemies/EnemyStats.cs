@@ -52,6 +52,9 @@ namespace Enemies
         [Tooltip("Flat distance at which the hit still lands, checked when it lands. 0 = Attack Range x 1.25 (as before). " +
                  "Make it bigger than Attack Range, so an enemy that starts a swing still hits a player who walks back a step.")]
         public float attackReach;
+        [Tooltip("Largest height difference (between the feet) at which the enemy can still attack or hit. Stops attacks through floors. " +
+                 "Raise it if stairs or ramps make enemies lose you.")]
+        public float attackVerticalReach = 2.5f;
         [Tooltip("The enemy steps this many units towards the player during the swing, so walking away does not dodge it. 0 = no lunge.")]
         public float lungeDistance;
         [Tooltip("Seconds the lunge takes, counted from the start of the attack. 0 = Attack Hit Delay.")]

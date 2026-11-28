@@ -76,6 +76,7 @@ GameObject:
   - component: {fileID: 4002732490469835626}
   - component: {fileID: 8368288608787550563}
   - component: {fileID: 8823345066538829389}
+  - component: {fileID: 3790664293355744021}
   m_Layer: 0
   m_Name: g polySurface709
   m_TagString: Untagged
@@ -176,3 +177,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.556826, y: 2, z: 1.359064}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3790664293355744021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9175949328235464251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b2f62ecfe3bd8c4db1f30fd48639b0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.SavePhone
+  prompt: Call in
+  usedPrompt: Line is dead
+  usedMessage: It only rings once.
+  onSaved:
+    m_PersistentCalls:
+      m_Calls: []

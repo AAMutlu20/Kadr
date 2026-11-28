@@ -21,6 +21,13 @@ namespace Gameplay
             Deaths = 0;
         }
 
+        /// <summary>For loading a save.</summary>
+        public static void Restore(int floorsCompleted, int deaths)
+        {
+            FloorsCompleted = Mathf.Max(0, floorsCompleted);
+            Deaths = Mathf.Max(0, deaths);
+        }
+
         public static void CompleteFloor() => FloorsCompleted++;
 
         public static void RegisterDeath() => Deaths++;

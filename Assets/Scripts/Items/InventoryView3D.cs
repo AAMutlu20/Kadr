@@ -66,6 +66,8 @@ namespace Items
         [SerializeField] private float countLift = 0f;
         [Tooltip("Scale of the number object. Tuned in play mode: 0.3 looked right.")]
         [SerializeField] private float countScale = 0.3f;
+        [Tooltip("Seconds after opening before the stack numbers appear, so they don't show through the closed lid. 0 = at once, with the health and XP.")]
+        [SerializeField] private float countRevealDelay = 0.3f;
 
         private static readonly Color GhostOk = new(0.3f, 1f, 0.4f, 0.4f);
         private static readonly Color GhostBad = new(1f, 0.25f, 0.25f, 0.4f);
@@ -99,6 +101,8 @@ namespace Items
         public bool Blocked { get; set; }
 
         private bool _open;
+        private bool _countsOn;
+        private float _countsAt = float.MaxValue;
         private float _readyAt;
         private float _savedTimeScale = 1f;
         private ItemStack _held;
@@ -191,6 +195,12 @@ namespace Items
             }
 
             AnimateViews();
+
+            if (_open && !_countsOn && Time.unscaledTime >= _countsAt)
+            {
+                _countsOn = true;
+                RefreshCounts();
+            }
 
             if (!_open) return;
 
@@ -305,6 +315,8 @@ namespace Items
             _open = true;
             inventory.IsOpen = true;
             _readyAt = Time.unscaledTime + openDelay;
+            _countsOn = false;
+            _countsAt = Time.unscaledTime + countRevealDelay;
 
             rig.SetOpen(true);
             if (hud) hud.SetVisible(true);
@@ -326,6 +338,9 @@ namespace Items
         {
             _open = false;
             inventory.IsOpen = false;
+            _countsOn = false;
+            _countsAt = float.MaxValue;
+            RefreshCounts();
 
             // Whatever was held goes back to its spot. It never left its grid, so nothing is lost.
             ReleaseHeld();
@@ -560,6 +575,11 @@ namespace Items
             return false;
         }
 
+        private void RefreshCounts()
+        {
+            foreach (var view in _views.Values) ApplyLabelAndCount(view);
+        }
+
         /// <summary>Updates the stack count text and its corner, which depend on the count and the rotation.</summary>
         private void ApplyLabelAndCount(ItemView v)
         {
@@ -569,7 +589,7 @@ namespace Items
             var h = rotated ? s.Definition.Width : s.Definition.Height;
             var cell = v.Zone.CellSize;
 
-            var showCount = s.Count > 1;
+            var showCount = _countsOn && s.Count > 1;
             v.Label.gameObject.SetActive(showCount);
             if (!showCount) return;
 

@@ -34,6 +34,17 @@ namespace Bosses
         private bool _ended;
 
         public bool Started => _started;
+        public bool Ended => _ended;
+        public BossController Boss => boss;
+
+        /// <summary>For loading a save: brings the fight back to where it was (started, or started and over).</summary>
+        public void RestoreState(bool started, bool ended)
+        {
+            if (!started || _started) return;
+
+            Begin();
+            if (ended) End();
+        }
 
         private void Awake()
         {

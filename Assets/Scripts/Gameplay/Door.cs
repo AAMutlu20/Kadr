@@ -64,7 +64,14 @@ namespace Gameplay
         private float _sign = 1f;
         private bool _sealed;
 
+        /// <summary>Every enabled door. The save system walks it.</summary>
+        public static IReadOnlyList<Door> Active => All;
+
         public bool IsLocked { get; private set; }
+        public bool IsSealed => _sealed;
+
+        /// <summary>+1 or -1: which way the open panel swung. Saved so a door loads open on the same side.</summary>
+        public float SwingSign => _sign;
         public bool IsOpen => _targetT > 0.5f;
         public bool IsMoving => !Mathf.Approximately(_t, _targetT);
         public string Group => group;
@@ -111,6 +118,17 @@ namespace Gameplay
             IsLocked = false;
             onUnlocked?.Invoke();
             if (!string.IsNullOrEmpty(unlockedMessage)) Notice(unlockedMessage);
+        }
+
+        /// <summary>For loading a save: puts the door straight into a state, with no swing and no sound.</summary>
+        public void RestoreState(bool open, bool locked, float sign)
+        {
+            if (_sealed) return;
+
+            IsLocked = locked;
+            _sign = Mathf.Approximately(sign, 0f) ? DefaultSign : Mathf.Sign(sign);
+            _t = _targetT = open ? 1f : 0f;
+            Apply();
         }
 
         /// <summary>For spawners (the level generator): sets the group and the starting lock state of a door that was just created.</summary>

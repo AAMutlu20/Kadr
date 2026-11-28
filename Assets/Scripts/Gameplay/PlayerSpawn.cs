@@ -34,16 +34,21 @@ namespace Gameplay
                 return false;
             }
 
-            // A CharacterController would walk back to its old position when the transform is set while it is enabled.
+            MoveTo(player, spawn.transform.position, spawn.transform.rotation);
+            return true;
+        }
+
+        /// <summary>Puts the player somewhere without the CharacterController walking back to the old spot.</summary>
+        public static void MoveTo(Transform player, Vector3 position, Quaternion rotation)
+        {
             var body = player.GetComponent<CharacterController>();
             var wasEnabled = body && body.enabled;
             if (body) body.enabled = false;
 
-            player.SetPositionAndRotation(spawn.transform.position, spawn.transform.rotation);
+            player.SetPositionAndRotation(position, rotation);
 
             if (body) body.enabled = wasEnabled;
             Physics.SyncTransforms();
-            return true;
         }
 
         private void OnDrawGizmos()

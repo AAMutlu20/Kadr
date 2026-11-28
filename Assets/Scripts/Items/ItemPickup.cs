@@ -18,6 +18,12 @@ namespace Items
         [Tooltip("Collect by walking into it (needs Is Trigger on the collider). Off = look at it and press E.")]
         [SerializeField] private bool autoPickup;
 
+        public ItemDefinition Item => item;
+        public int Count => count;
+
+        /// <summary>For loading a save: how many are left lying here.</summary>
+        public void SetCount(int value) => count = Mathf.Max(1, value);
+
         /// <summary>What the prompt says while the player looks at it.</summary>
         public string Prompt => !item ? "" : count > 1 ? $"{item.DisplayName}  x{count}" : item.DisplayName;
 

@@ -1498,6 +1498,7 @@ GameObject:
   - component: {fileID: 6132144269221699347}
   - component: {fileID: 1968287695311119831}
   - component: {fileID: 3333646141057812269}
+  - component: {fileID: 7709591195131138827}
   m_Layer: 9
   m_Name: Cube.014
   m_TagString: Untagged
@@ -1598,6 +1599,24 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.01996992, y: 0.02, z: 0.013921352}
   m_Center: {x: 0, y: 0.0000000013969836, z: 0.007192635}
+--- !u!114 &7709591195131138827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 793336321624233770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b2f62ecfe3bd8c4db1f30fd48639b0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.SavePhone
+  prompt: Call in
+  usedPrompt: Line is dead
+  usedMessage: It only rings once.
+  onSaved:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &803886443811151590
 GameObject:
   m_ObjectHideFlags: 0

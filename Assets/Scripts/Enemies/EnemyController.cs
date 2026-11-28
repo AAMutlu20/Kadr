@@ -106,6 +106,12 @@ namespace Enemies
             }
         }
 
+        /// <summary>Height difference between the target's feet and ours. Only valid when HasTarget.</summary>
+        public float VerticalGapToTarget => Mathf.Abs(Target.position.y - transform.position.y);
+
+        /// <summary>False when the target is on another level (above or below), however close it is flat.</summary>
+        public bool TargetWithinHeight => VerticalGapToTarget <= stats.attackVerticalReach;
+
         private Vector3 EyePosition => eye ? eye.position : transform.position + Vector3.up * 3f;
 
         private void Awake()
@@ -378,7 +384,7 @@ namespace Enemies
         /// <summary>Lands the hit if the target is still within reach (with a little tolerance).</summary>
         public void DealDamage()
         {
-            if (!HasTarget || DistanceToTarget > HitReach) return;
+            if (!HasTarget || DistanceToTarget > HitReach || !TargetWithinHeight) return;
 
             _targetDamageable.TakeDamage(stats.attackDamage, gameObject);
         }
@@ -418,7 +424,7 @@ namespace Enemies
 
         public bool IsTargetInAttackReach()
         {
-            return HasTarget && DistanceToTarget <= stats.attackRange * ReachTolerance;
+            return HasTarget && DistanceToTarget <= stats.attackRange * ReachTolerance && TargetWithinHeight;
         }
 
         // Events
